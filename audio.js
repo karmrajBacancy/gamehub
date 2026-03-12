@@ -49,7 +49,7 @@ const NexusAudio = (() => {
           audioState = "dashboard";
           _startDashboardMusic();
         }
-      }, 7500);
+      }, 9000);
       pendingTimers.push(t);
     } catch (e) { console.warn("Audio init failed:", e); }
   }
@@ -287,7 +287,7 @@ const NexusAudio = (() => {
     riseOsc.stop(ctx.currentTime + 4); riseOsc2.stop(ctx.currentTime + 4);
 
     // 3. Card landing thuds
-    const cardDelays = [0.3, 0.7, 1.1, 1.5, 1.9, 2.3, 2.7, 3.1, 3.5, 3.9];
+    const cardDelays = [0.3, 0.7, 1.1, 1.5, 1.9, 2.3, 2.7, 3.1, 3.5, 3.9, 4.3, 4.7, 5.1];
     cardDelays.forEach((d, i) => {
       const landTime = d + 1.4;
       const t = setTimeout(() => {
@@ -301,7 +301,7 @@ const NexusAudio = (() => {
         thud.connect(thudG); thudG.connect(introGain);
         thud.start(); thud.stop(ctx.currentTime + 0.25);
         playNoise(0.06, 2000 + i * 500, introGain, 0.15);
-        const chimeNotes = [392, 440, 523.3, 587.3, 659.3, 784, 880, 987.8, 1047, 1175];
+        const chimeNotes = [392, 440, 523.3, 587.3, 659.3, 784, 880, 987.8, 1047, 1175, 1319, 1480, 1568];
         playTone(chimeNotes[i], 0.4, "triangle", introGain, 0.12);
         setTimeout(() => playTone(chimeNotes[i] * 1.5, 0.3, "sine", introGain, 0.06), 80);
       }, landTime * 1000);
@@ -344,7 +344,8 @@ const NexusAudio = (() => {
     const makers = {
       snake: musicSnake, memory: musicMemory, reaction: musicReaction,
       whack: musicWhack, typing: musicTyping, aim: musicAim,
-      panic: musicWhack, wrong: musicMemory, cursed: musicReaction, emoji: musicTyping
+      panic: musicWhack, wrong: musicMemory, cursed: musicReaction, emoji: musicTyping,
+      dodge: musicAim, slash: musicWhack, runner: musicSnake
     };
     const maker = makers[gameName] || makers.snake;
     gameMusicHandle = maker();
