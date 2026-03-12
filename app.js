@@ -49,7 +49,7 @@ const state = {
   coins: 0, totalCoins: 0, gamesPlayed: 0,
   gamesPlayedSet: new Set(),
   achievements: new Set(),
-  bestScores: { snake: 0, memory: 0, reaction: Infinity, whack: 0, typing: 0, aim: Infinity },
+  bestScores: { snake: 0, memory: 0, reaction: Infinity, whack: 0, typing: 0, aim: Infinity, panic: 0, wrong: 0, cursed: 0, emoji: 0 },
   history: [],
   combo: 0, comboTimer: null,
   playerName: localStorage.getItem("nexus_playerName") || "",
@@ -198,7 +198,7 @@ document.addEventListener("click", (e) => {
 // Wait for splash to be dismissed before setting landing timers
 function setupCardLanding() {
   document.querySelectorAll(".game-card").forEach((card, i) => {
-    const delay = [300, 700, 1100, 1500, 1900, 2300][i] || 300;
+    const delay = [300, 700, 1100, 1500, 1900, 2300, 2700, 3100, 3500, 3900][i] || 300;
     setTimeout(() => { card.classList.add("landed"); }, delay + 2000);
   });
 }
@@ -341,7 +341,7 @@ function endGame(gameName, score, label) {
 
   // Achievements
   if (state.gamesPlayed === 1) unlock("first-game", "First Game");
-  if (state.gamesPlayedSet.size >= 6) unlock("collector", "Collector");
+  if (state.gamesPlayedSet.size >= 10) unlock("collector", "Collector");
   if (state.gamesPlayed >= 20) unlock("marathon", "Marathon");
 
   return { xpEarned, coinsEarned, isBest };
@@ -354,11 +354,11 @@ function updateStatsView() {
   document.getElementById("statGames").textContent = state.gamesPlayed;
   document.getElementById("statXP").textContent = state.xp + (state.level - 1) * 100;
   document.getElementById("statCoins").textContent = state.totalCoins;
-  document.getElementById("statAch").textContent = `${state.achievements.size} / 6`;
+  document.getElementById("statAch").textContent = `${state.achievements.size} / 8`;
   document.getElementById("barGames").style.width = Math.min(state.gamesPlayed / 20 * 100, 100) + "%";
   document.getElementById("barXP").style.width = Math.min((state.xp + (state.level-1)*100) / 500 * 100, 100) + "%";
   document.getElementById("barCoins").style.width = Math.min(state.totalCoins / 500 * 100, 100) + "%";
-  document.getElementById("barAch").style.width = (state.achievements.size / 6 * 100) + "%";
+  document.getElementById("barAch").style.width = (state.achievements.size / 8 * 100) + "%";
 
   // History
   const list = document.getElementById("historyList");
@@ -398,7 +398,8 @@ function openGame(name) {
   activeGame = name;
   document.getElementById("overlayTitle").textContent = {
     snake: "SNAKE", memory: "MEMORY MATCH", reaction: "REACTION TIME",
-    whack: "WHACK-A-BOT", typing: "SPEED TYPE", aim: "AIM TRAINER"
+    whack: "WHACK-A-BOT", typing: "SPEED TYPE", aim: "AIM TRAINER",
+    panic: "PANIC BUTTON", wrong: "WRONG ANSWERS", cursed: "CURSOR BETRAYAL", emoji: "EMOJI ROULETTE"
   }[name];
   overlay.classList.add("active");
   if (typeof NexusAudio !== 'undefined') NexusAudio.startGameMusic(name);
@@ -411,6 +412,10 @@ function openGame(name) {
     case "whack": initWhack(); break;
     case "typing": initTyping(); break;
     case "aim": initAim(); break;
+    case "panic": initPanic(); break;
+    case "wrong": initWrong(); break;
+    case "cursed": initCursed(); break;
+    case "emoji": initEmoji(); break;
   }
   setTimeout(setupCursorHovers, 100);
 }
@@ -512,6 +517,62 @@ const funnyMessages = {
     "A target just updated its Tinder bio: 'Survived {name}.'",
     "Hey {name}, the targets are the ROUND GLOWING things. Just FYI.",
     "{name} makes stormtroopers look like snipers. That's impressive, honestly."
+  ],
+  panic: [
+    "The button wasn't even trying to hide, {name}.",
+    "{name} got outrun by a BUTTON. A rectangular HTML element.",
+    "That button has better cardio than {name}.",
+    "The button filed a restraining order against {name}'s cursor.",
+    "{name} couldn't catch a cold, let alone a button.",
+    "Even the decoy buttons felt bad watching {name}.",
+    "That button just qualified for the Olympics. {name} didn't.",
+    "{name}'s cursor moves like it's walking through honey.",
+    "A button just put '{name} survivor' on its resume.",
+    "{name} lost a fight with CSS positioning. Think about that.",
+    "The button is now charging {name} rent for all the time they wasted.",
+    "Somewhere, a button is telling its kids about surviving {name}."
+  ],
+  wrong: [
+    "{name} accidentally got the RIGHT answer. That's the WRONG thing to do here.",
+    "{name}'s brain can't stop being correct. Must be exhausting.",
+    "Hey {name}, the instructions said WRONG answers. Can you read?",
+    "{name} is too smart for this game. And by 'too smart' I mean not smart enough.",
+    "{name}'s instincts betrayed them harder than their ex.",
+    "Being wrong on purpose is hard. Being wrong on accident is what {name} does.",
+    "{name} just proved that thinking is their enemy.",
+    "Your brain: 'pick the right one!' — {name}: *listens* — WRONG MOVE.",
+    "Congratulations {name}, you're bad at being bad.",
+    "{name} failed at failing. That's a new level of fail.",
+    "Plot twist: {name} can't even do the wrong thing right.",
+    "The WRONG answers are literally LABELED. Come on, {name}."
+  ],
+  cursed: [
+    "{name} got betrayed by their own cursor. Trust issues unlocked.",
+    "Imagine losing to your own mouse, {name}. Couldn't be... wait, it IS {name}.",
+    "{name} just discovered their cursor has free will. And it hates them.",
+    "Your cursor wasn't inverted, {name}. You're just bad normally.",
+    "The cursor did its best. {name} did their worst.",
+    "{name}'s hand-eye coordination just filed for bankruptcy.",
+    "Even with a normal cursor, {name} would still struggle. Let's be honest.",
+    "The cursor was the hero. {name} was the obstacle.",
+    "{name} tried to click a button. The button clicked back.",
+    "Therapists now treat 'Cursor Betrayal PTSD' thanks to {name}.",
+    "{name}'s spatial awareness left the chat.",
+    "The cursor went left. {name}'s brain went home."
+  ],
+  emoji: [
+    "{name} can't match a smiley face. Let that sink in.",
+    "The emoji wheel was literally SHOWING the answer, {name}.",
+    "{name} has the timing of a broken metronome.",
+    "Even slot machines give better odds than {name}'s clicks.",
+    "{name} thought 😭 was 😂. Emotional intelligence: zero.",
+    "The emojis are spinning slower than {name}'s brain.",
+    "Timing is everything. {name} has none of it.",
+    "{name} plays Emoji Roulette like they play life — randomly and poorly.",
+    "The wheel: *exists* — {name}: *misses anyway*",
+    "{name}'s finger was on the button. The brain was on vacation.",
+    "That emoji just winked at {name}. Out of pity.",
+    "Fun fact: {name} has missed more emojis than most people see in a lifetime."
   ]
 };
 
@@ -533,11 +594,30 @@ const winMessages = {
     "{name} actually hit things? This wasn't in the script.",
     "The targets are filing a complaint against {name}. Too aggressive.",
     "{name} woke up today and chose violence. Respect."
+  ],
+  panic: [
+    "Wait {name} actually CAUGHT that button? Hacker confirmed.",
+    "The button is filing a police report against {name}.",
+    "Speed demon {name} actually tracked it down. Terrifying.",
+    "That button needs therapy after what {name} did."
+  ],
+  wrong: [
+    "{name} is a professional idiot. In the BEST way possible.",
+    "Being wrong has never felt so right. Good job, {name}.",
+    "{name} mastered the art of being deliberately stupid.",
+    "Harvard wants to study how {name} suppresses correct instincts."
+  ],
+  emoji: [
+    "Did {name} just... time that perfectly? Suspicious.",
+    "{name} has the timing of a Swiss watch. For once.",
+    "The emoji didn't stand a chance against {name}'s reflexes.",
+    "Okay {name}, you can stop showing off now."
   ]
 };
 
 const gameOverIcons = {
-  snake: "💀", memory: "🧠", reaction: "⚡", whack: "🔨", typing: "⌨️", aim: "🎯"
+  snake: "💀", memory: "🧠", reaction: "⚡", whack: "🔨", typing: "⌨️", aim: "🎯",
+  panic: "💨", wrong: "🤔", cursed: "👁️", emoji: "🎰"
 };
 
 const gameOverTitles = {
@@ -546,7 +626,11 @@ const gameOverTitles = {
   reaction: "TIMES UP",
   whack: "TIMES UP",
   typing: "TIMES UP",
-  aim: "FINISHED!"
+  aim: "FINISHED!",
+  panic: "TIMES UP",
+  wrong: "GAME OVER",
+  cursed: "TIMES UP",
+  emoji: "FINISHED!"
 };
 
 function showGameOver(gameName, res, isWin) {
@@ -1616,6 +1700,515 @@ function initAim() {
       document.getElementById("aimTime").textContent = ((Date.now() - startTime) / 1000).toFixed(1);
     }
   }, 100);
+}
+
+// ═══════════════════════════════════════
+// GAME: PANIC BUTTON
+// ═══════════════════════════════════════
+function initPanic() {
+  let score = 0, timeLeft = 25, catches = 0;
+  const pName = state.playerName || "PLAYER";
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>CAUGHT: <b id="panicScore">0</b></span>
+      <span>TIME: <b id="panicTime">25</b>s</span>
+    </div>
+    <div class="panic-arena" id="panicArena">
+      <div class="panic-taunt" id="panicTaunt">Catch the button... if you can 😏</div>
+      <button class="panic-btn" id="panicBtn">CLICK ME!</button>
+      <button class="panic-decoy panic-decoy-1">CLICK ME!</button>
+      <button class="panic-decoy panic-decoy-2">CLICK ME!</button>
+      <button class="panic-decoy panic-decoy-3">CLICK ME!</button>
+    </div>
+  `;
+
+  const arena = document.getElementById("panicArena");
+  const btn = document.getElementById("panicBtn");
+  const taunt = document.getElementById("panicTaunt");
+  const decoys = arena.querySelectorAll(".panic-decoy");
+
+  const panicTaunts = [
+    "Too slow!", "Can't catch me!", "HAHA nice try!",
+    "Over here, dummy!", "You call that a click?", "Nope!",
+    "Almost! (not really)", `${pName} can't aim lol`, "I'm RIGHT HERE!",
+    "Bro just give up", "My grandma clicks faster", "Pathetic! 😂",
+    "MISSED! Again!", `${pName} is struggling omg`, "Try harder!",
+    "I could do this all day", "Yawn... 🥱"
+  ];
+
+  const catchTaunts = [
+    "Lucky click!", "Okay fine you got ONE", "Even a broken clock...",
+    "Don't get cocky!", "Fluke. Definitely a fluke.", "Wait, HOW?!"
+  ];
+
+  function moveBtn() {
+    const aw = arena.offsetWidth - 120;
+    const ah = arena.offsetHeight - 50;
+    btn.style.left = (10 + Math.random() * aw) + "px";
+    btn.style.top = (40 + Math.random() * ah) + "px";
+    btn.style.transform = `rotate(${(Math.random() - 0.5) * 30}deg) scale(${0.7 + Math.random() * 0.6})`;
+  }
+
+  function moveDecoys() {
+    decoys.forEach(d => {
+      const aw = arena.offsetWidth - 120;
+      const ah = arena.offsetHeight - 50;
+      d.style.left = (10 + Math.random() * aw) + "px";
+      d.style.top = (40 + Math.random() * ah) + "px";
+      d.style.display = Math.random() > 0.4 ? "block" : "none";
+    });
+  }
+
+  // Flee on mouse proximity
+  arena.addEventListener("mousemove", (e) => {
+    const rect = btn.getBoundingClientRect();
+    const bx = rect.left + rect.width / 2;
+    const by = rect.top + rect.height / 2;
+    const dx = e.clientX - bx;
+    const dy = e.clientY - by;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 120) {
+      moveBtn();
+      moveDecoys();
+      taunt.textContent = panicTaunts[Math.floor(Math.random() * panicTaunts.length)];
+    }
+  });
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    catches++;
+    score += 10 + catches * 2;
+    document.getElementById("panicScore").textContent = catches;
+    showFloatingText("+" + (10 + catches * 2), e.clientX, e.clientY - 20, "var(--success)");
+    if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+    taunt.textContent = catchTaunts[Math.floor(Math.random() * catchTaunts.length)];
+    moveBtn();
+    moveDecoys();
+  });
+
+  decoys.forEach(d => {
+    d.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+      taunt.textContent = "THAT'S A DECOY! 😂 Wrong button, genius!";
+      d.classList.add("panic-decoy-wrong");
+      setTimeout(() => d.classList.remove("panic-decoy-wrong"), 500);
+    });
+  });
+
+  moveBtn();
+  moveDecoys();
+
+  // Periodically teleport
+  const moveTimer = setInterval(() => {
+    if (timeLeft > 0 && Math.random() > 0.5) { moveBtn(); moveDecoys(); }
+  }, 1500);
+
+  const countdown = setInterval(() => {
+    timeLeft--;
+    document.getElementById("panicTime").textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      clearInterval(moveTimer);
+      if (catches >= 15) unlock("panicmaster", "Button Catcher");
+      const res = endGame("panic", score);
+      showGameOver("panic", res, catches >= 10);
+    }
+  }, 1000);
+  window._gameInterval = countdown;
+  setTimeout(setupCursorHovers, 50);
+}
+
+// ═══════════════════════════════════════
+// GAME: WRONG ANSWERS ONLY
+// ═══════════════════════════════════════
+function initWrong() {
+  const questions = [
+    { q: "What color is the sky?", right: "Blue", wrong: ["Green", "Purple", "Plaid"] },
+    { q: "How many legs does a dog have?", right: "4", wrong: ["7", "None", "It depends"] },
+    { q: "What is 2 + 2?", right: "4", wrong: ["Fish", "Thursday", "Yes"] },
+    { q: "Which planet do we live on?", right: "Earth", wrong: ["Mars", "The Moon", "Costco"] },
+    { q: "What do cows drink?", right: "Water", wrong: ["Milk", "Coffee", "Tears"] },
+    { q: "How many months have 28 days?", right: "All of them", wrong: ["Just 1", "None", "February only"] },
+    { q: "What's the opposite of hot?", right: "Cold", wrong: ["Lukewarm", "Spicy", "Wednesday"] },
+    { q: "Which way does the sun rise?", right: "East", wrong: ["Down", "Sideways", "It doesn't"] },
+    { q: "What sound does a cat make?", right: "Meow", wrong: ["Moo", "Windows startup", "Nothing"] },
+    { q: "Is fire hot or cold?", right: "Hot", wrong: ["Cold", "Medium rare", "Both"] },
+    { q: "What's bigger: the moon or a coin?", right: "The moon", wrong: ["A coin", "Equal", "Trick question"] },
+    { q: "How many fingers on one hand?", right: "5", wrong: ["11", "Depends on the hand", "π"] },
+    { q: "What do you breathe?", right: "Air", wrong: ["WiFi", "Vibes", "Regret"] },
+    { q: "Which animal barks?", right: "Dog", wrong: ["Fish", "Table", "My neighbor"] },
+    { q: "What year comes after 2024?", right: "2025", wrong: ["1997", "Never", "2024 Part 2"] },
+    { q: "Is water wet?", right: "Yes", wrong: ["Debatable", "Only on Tuesdays", "Ask the water"] },
+    { q: "How do birds fly?", right: "Wings", wrong: ["Uber", "They don't", "Positive thinking"] },
+    { q: "What's 10 x 0?", right: "0", wrong: ["10", "100", "Undefined vibes"] },
+  ];
+
+  let score = 0, round = 0, lives = 3, totalRounds = 12;
+  let shuffledQs = [...questions].sort(() => Math.random() - 0.5).slice(0, totalRounds);
+  const pName = state.playerName || "PLAYER";
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>SCORE: <b id="wrongScore">0</b></span>
+      <span>ROUND: <b id="wrongRound">1</b> / ${totalRounds}</span>
+      <span>LIVES: <b id="wrongLives">❤️❤️❤️</b></span>
+    </div>
+    <div class="wrong-game" id="wrongGame">
+      <div class="wrong-instruction">⚠️ PICK THE <span style="color:var(--mythic)">WRONG</span> ANSWER ⚠️</div>
+      <div class="wrong-question" id="wrongQ"></div>
+      <div class="wrong-options" id="wrongOpts"></div>
+      <div class="wrong-feedback" id="wrongFeedback"></div>
+    </div>
+  `;
+
+  function showQuestion() {
+    if (round >= totalRounds || lives <= 0) {
+      if (score >= 10) unlock("wrongking", "Certified Idiot");
+      const res = endGame("wrong", score);
+      showGameOver("wrong", res, score >= 8);
+      return;
+    }
+    const q = shuffledQs[round];
+    document.getElementById("wrongQ").textContent = q.q;
+    document.getElementById("wrongRound").textContent = round + 1;
+
+    // Shuffle: 1 right + 3 wrong
+    const options = [
+      { text: q.right, isRight: true },
+      ...q.wrong.map(w => ({ text: w, isRight: false }))
+    ].sort(() => Math.random() - 0.5);
+
+    const optsEl = document.getElementById("wrongOpts");
+    optsEl.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "wrong-opt";
+      btn.textContent = opt.text;
+      btn.addEventListener("click", () => handleAnswer(opt, btn, optsEl));
+      optsEl.appendChild(btn);
+    });
+    document.getElementById("wrongFeedback").textContent = "";
+    setTimeout(setupCursorHovers, 50);
+  }
+
+  function handleAnswer(opt, btn, optsEl) {
+    // Disable all buttons
+    optsEl.querySelectorAll(".wrong-opt").forEach(b => b.disabled = true);
+    const fb = document.getElementById("wrongFeedback");
+
+    if (!opt.isRight) {
+      // Picked WRONG answer = correct play!
+      score++;
+      document.getElementById("wrongScore").textContent = score;
+      btn.classList.add("wrong-opt-correct");
+      fb.textContent = "✅ WRONG answer! That's... correct? Nice!";
+      fb.style.color = "var(--success)";
+      showFloatingText("+1", mouseX, mouseY - 20, "var(--success)");
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+    } else {
+      // Picked RIGHT answer = you failed!
+      lives--;
+      const hearts = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+      document.getElementById("wrongLives").innerHTML = hearts;
+      btn.classList.add("wrong-opt-wrong");
+      fb.textContent = "❌ That's the RIGHT answer! You were supposed to be WRONG!";
+      fb.style.color = "var(--mythic)";
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+    }
+
+    round++;
+    setTimeout(showQuestion, 1500);
+  }
+
+  showQuestion();
+}
+
+// ═══════════════════════════════════════
+// GAME: CURSOR BETRAYAL
+// ═══════════════════════════════════════
+function initCursed() {
+  let score = 0, timeLeft = 30, taskNum = 0;
+  const pName = state.playerName || "PLAYER";
+
+  const curseTypes = ["inverted", "delayed", "drunk", "mirrored", "jittery"];
+  let currentCurse = "inverted";
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>SCORE: <b id="cursedScore">0</b></span>
+      <span>TIME: <b id="cursedTime">30</b>s</span>
+    </div>
+    <div class="cursed-game" id="cursedGame">
+      <div class="cursed-curse" id="cursedCurse">CURSE: INVERTED</div>
+      <div class="cursed-instruction" id="cursedInstruction">Click the green button!</div>
+      <div class="cursed-arena" id="cursedArena"></div>
+    </div>
+  `;
+
+  const arenaEl = document.getElementById("cursedArena");
+  const instrEl = document.getElementById("cursedInstruction");
+  const curseEl = document.getElementById("cursedCurse");
+
+  // Custom cursor overlay within the arena
+  let fakeCursorEl = document.createElement("div");
+  fakeCursorEl.className = "cursed-fake-cursor";
+  fakeCursorEl.textContent = "⊕";
+  arenaEl.appendChild(fakeCursorEl);
+
+  let realMX = 0, realMY = 0;
+  let fakeMX = 0, fakeMY = 0;
+  let delayQueue = [];
+
+  arenaEl.addEventListener("mousemove", (e) => {
+    const rect = arenaEl.getBoundingClientRect();
+    realMX = e.clientX - rect.left;
+    realMY = e.clientY - rect.top;
+
+    if (currentCurse === "inverted") {
+      fakeMX = rect.width - realMX;
+      fakeMY = rect.height - realMY;
+    } else if (currentCurse === "mirrored") {
+      fakeMX = rect.width - realMX;
+      fakeMY = realMY;
+    } else if (currentCurse === "drunk") {
+      fakeMX = realMX + (Math.random() - 0.5) * 80;
+      fakeMY = realMY + (Math.random() - 0.5) * 80;
+    } else if (currentCurse === "jittery") {
+      fakeMX = realMX + Math.sin(Date.now() * 0.01) * 50;
+      fakeMY = realMY + Math.cos(Date.now() * 0.013) * 50;
+    } else if (currentCurse === "delayed") {
+      delayQueue.push({ x: realMX, y: realMY, t: Date.now() });
+    }
+
+    if (currentCurse !== "delayed") {
+      fakeCursorEl.style.left = fakeMX + "px";
+      fakeCursorEl.style.top = fakeMY + "px";
+    }
+  });
+
+  // Delayed cursor update
+  setInterval(() => {
+    if (currentCurse === "delayed" && delayQueue.length > 0) {
+      const now = Date.now();
+      while (delayQueue.length > 0 && now - delayQueue[0].t > 400) {
+        const p = delayQueue.shift();
+        fakeMX = p.x;
+        fakeMY = p.y;
+      }
+      fakeCursorEl.style.left = fakeMX + "px";
+      fakeCursorEl.style.top = fakeMY + "px";
+    }
+  }, 30);
+
+  function spawnTask() {
+    // Remove old targets
+    arenaEl.querySelectorAll(".cursed-target").forEach(t => t.remove());
+
+    currentCurse = curseTypes[Math.floor(Math.random() * curseTypes.length)];
+    curseEl.textContent = "CURSE: " + currentCurse.toUpperCase();
+    delayQueue = [];
+
+    const tasks = [
+      { instruction: "Click the GREEN button!", spawnFn: spawnColorBtn, color: "#00ff88" },
+      { instruction: "Click the BIGGEST circle!", spawnFn: spawnSizeTask },
+      { instruction: "Click the button that says 'YES'!", spawnFn: spawnWordTask },
+    ];
+
+    const task = tasks[taskNum % tasks.length];
+    instrEl.textContent = task.instruction;
+    task.spawnFn();
+    taskNum++;
+    setTimeout(setupCursorHovers, 50);
+  }
+
+  function spawnColorBtn(correctColor) {
+    const colors = ["#00ff88", "#ff2d78", "#ffd700", "#b44aff", "#00f0ff"];
+    const correctIdx = Math.floor(Math.random() * 5);
+    for (let i = 0; i < 5; i++) {
+      const btn = document.createElement("button");
+      btn.className = "cursed-target";
+      btn.style.background = colors[i];
+      btn.style.left = (15 + (i % 3) * 35) + "%";
+      btn.style.top = (20 + Math.floor(i / 3) * 40) + "%";
+      btn.textContent = "●";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (colors[i] === "#00ff88") {
+          score += 10;
+          document.getElementById("cursedScore").textContent = score;
+          showFloatingText("+10", e.clientX, e.clientY - 20, "var(--success)");
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+          spawnTask();
+        } else {
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+          instrEl.textContent = "WRONG COLOR! Click GREEN!";
+        }
+      });
+      arenaEl.appendChild(btn);
+    }
+  }
+
+  function spawnSizeTask() {
+    const sizes = [30, 45, 60, 40, 50];
+    const maxIdx = sizes.indexOf(Math.max(...sizes));
+    for (let i = 0; i < 5; i++) {
+      const btn = document.createElement("button");
+      btn.className = "cursed-target cursed-target-circle";
+      btn.style.width = sizes[i] + "px";
+      btn.style.height = sizes[i] + "px";
+      btn.style.left = (10 + Math.random() * 70) + "%";
+      btn.style.top = (10 + Math.random() * 70) + "%";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (i === maxIdx) {
+          score += 10;
+          document.getElementById("cursedScore").textContent = score;
+          showFloatingText("+10", e.clientX, e.clientY - 20, "var(--success)");
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+          spawnTask();
+        } else {
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+          instrEl.textContent = "WRONG! Click the BIGGEST one!";
+        }
+      });
+      arenaEl.appendChild(btn);
+    }
+  }
+
+  function spawnWordTask() {
+    const words = ["YES", "NO", "MAYBE", "NAH", "NOPE"];
+    for (let i = 0; i < 5; i++) {
+      const btn = document.createElement("button");
+      btn.className = "cursed-target";
+      btn.textContent = words[i];
+      btn.style.left = (10 + (i % 3) * 35) + "%";
+      btn.style.top = (20 + Math.floor(i / 3) * 40) + "%";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (words[i] === "YES") {
+          score += 10;
+          document.getElementById("cursedScore").textContent = score;
+          showFloatingText("+10", e.clientX, e.clientY - 20, "var(--success)");
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+          spawnTask();
+        } else {
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+          instrEl.textContent = "WRONG! Click 'YES'!";
+        }
+      });
+      arenaEl.appendChild(btn);
+    }
+  }
+
+  spawnTask();
+
+  const countdown = setInterval(() => {
+    timeLeft--;
+    document.getElementById("cursedTime").textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      const res = endGame("cursed", score);
+      showGameOver("cursed", res, score >= 80);
+    }
+  }, 1000);
+  window._gameInterval = countdown;
+}
+
+// ═══════════════════════════════════════
+// GAME: EMOJI ROULETTE
+// ═══════════════════════════════════════
+function initEmoji() {
+  const emojis = ["😂", "😭", "😡", "🥰", "😱", "🤮", "😴", "🤯", "😎", "🥳", "😈", "🤡"];
+  let score = 0, round = 0, totalRounds = 15;
+  let spinning = false, spinInterval = null;
+  let currentIdx = 0, targetEmoji = "";
+  let speed = 60;
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>SCORE: <b id="emojiScore">0</b></span>
+      <span>ROUND: <b id="emojiRound">1</b> / ${totalRounds}</span>
+    </div>
+    <div class="emoji-game" id="emojiGame">
+      <div class="emoji-target-label">MATCH THIS:</div>
+      <div class="emoji-target" id="emojiTarget">😂</div>
+      <div class="emoji-spinner-container">
+        <div class="emoji-spinner" id="emojiSpinner">😂</div>
+      </div>
+      <button class="game-btn emoji-stop-btn" id="emojiStop">STOP!</button>
+      <div class="emoji-feedback" id="emojiFeedback"></div>
+    </div>
+  `;
+
+  const targetEl = document.getElementById("emojiTarget");
+  const spinnerEl = document.getElementById("emojiSpinner");
+  const stopBtn = document.getElementById("emojiStop");
+  const feedbackEl = document.getElementById("emojiFeedback");
+
+  function startRound() {
+    if (round >= totalRounds) {
+      const res = endGame("emoji", score);
+      showGameOver("emoji", res, score >= 10);
+      return;
+    }
+
+    targetEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    targetEl.textContent = targetEmoji;
+    document.getElementById("emojiRound").textContent = round + 1;
+    feedbackEl.textContent = "";
+    stopBtn.disabled = false;
+    stopBtn.textContent = "STOP!";
+
+    // Speed increases each round
+    speed = Math.max(30, 80 - round * 3);
+    spinning = true;
+    currentIdx = Math.floor(Math.random() * emojis.length);
+
+    spinInterval = setInterval(() => {
+      currentIdx = (currentIdx + 1) % emojis.length;
+      spinnerEl.textContent = emojis[currentIdx];
+      spinnerEl.style.transform = `scale(${0.9 + Math.random() * 0.2})`;
+    }, speed);
+    window._gameInterval = spinInterval;
+  }
+
+  stopBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!spinning) return;
+    spinning = false;
+    clearInterval(spinInterval);
+    stopBtn.disabled = true;
+
+    const landed = emojis[currentIdx];
+    spinnerEl.style.transform = "scale(1.3)";
+
+    if (landed === targetEmoji) {
+      score++;
+      document.getElementById("emojiScore").textContent = score;
+      feedbackEl.textContent = "✅ MATCH!";
+      feedbackEl.style.color = "var(--success)";
+      spinnerEl.classList.add("emoji-match");
+      showFloatingText("+1", e.clientX, e.clientY - 20, "var(--success)");
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+    } else {
+      feedbackEl.textContent = `❌ Got ${landed} — needed ${targetEmoji}`;
+      feedbackEl.style.color = "var(--mythic)";
+      spinnerEl.classList.add("emoji-miss");
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+    }
+
+    round++;
+    setTimeout(() => {
+      spinnerEl.classList.remove("emoji-match", "emoji-miss");
+      spinnerEl.style.transform = "scale(1)";
+      startRound();
+    }, 1200);
+  });
+
+  startRound();
+  setTimeout(setupCursorHovers, 50);
 }
 
 // ═══════════════════════════════════════

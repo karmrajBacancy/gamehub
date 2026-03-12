@@ -411,6 +411,10 @@ body.ready .hud {
 .game-card:nth-child(4){ animation-delay: 1.5s; }
 .game-card:nth-child(5){ animation-delay: 1.9s; }
 .game-card:nth-child(6){ animation-delay: 2.3s; }
+.game-card:nth-child(7){ animation-delay: 2.7s; }
+.game-card:nth-child(8){ animation-delay: 3.1s; }
+.game-card:nth-child(9){ animation-delay: 3.5s; }
+.game-card:nth-child(10){ animation-delay: 3.9s; }
 
 @keyframes card-fly-in {
   0% {
@@ -463,6 +467,10 @@ body.ready .hud {
 .game-card:nth-child(4)::before { animation-delay: 1.5s; }
 .game-card:nth-child(5)::before { animation-delay: 1.9s; }
 .game-card:nth-child(6)::before { animation-delay: 2.3s; }
+.game-card:nth-child(7)::before { animation-delay: 2.7s; }
+.game-card:nth-child(8)::before { animation-delay: 3.1s; }
+.game-card:nth-child(9)::before { animation-delay: 3.5s; }
+.game-card:nth-child(10)::before { animation-delay: 3.9s; }
 
 @keyframes card-trail {
   0% { opacity: 0; }
@@ -918,4 +926,183 @@ body.ready .hud {
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:900px) { .game-grid{grid-template-columns:repeat(2,1fr)} .stats-grid{grid-template-columns:repeat(2,1fr)} .hud-nav{display:none} }
+/* ═══ PANIC BUTTON ═══ */
+.panic-arena {
+  width: 100%; height: 350px; background: #0a0a12; border-radius: 12px;
+  border: 1px solid #1a1a2a; position: relative; overflow: hidden; cursor: none;
+}
+.panic-taunt {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 600;
+  color: var(--secondary); letter-spacing: 1px; white-space: nowrap;
+  text-shadow: 0 0 10px rgba(180,74,255,0.3);
+  transition: all 0.3s;
+}
+.panic-btn {
+  position: absolute; padding: 12px 28px;
+  font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; border: none; border-radius: 10px; cursor: none;
+  background: linear-gradient(135deg, var(--success), var(--primary));
+  color: var(--bg); box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  transition: left 0.15s ease, top 0.15s ease, transform 0.15s ease;
+  z-index: 5;
+}
+.panic-btn:hover { box-shadow: 0 0 30px rgba(0,255,136,0.5); }
+.panic-decoy {
+  position: absolute; padding: 12px 28px;
+  font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; border: none; border-radius: 10px; cursor: none;
+  background: linear-gradient(135deg, #333, #444);
+  color: #888; box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  transition: left 0.15s ease, top 0.15s ease;
+  z-index: 3;
+}
+.panic-decoy-wrong {
+  animation: panic-decoy-shake 0.5s ease;
+  border: 2px solid var(--mythic);
+}
+@keyframes panic-decoy-shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)}
+  60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+}
+
+/* ═══ WRONG ANSWERS ═══ */
+.wrong-game {
+  width: 100%; max-width: 500px; text-align: center;
+}
+.wrong-instruction {
+  font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700;
+  letter-spacing: 3px; color: var(--accent);
+  padding: 10px 20px; margin-bottom: 20px;
+  border: 1px solid rgba(255,107,53,0.3); border-radius: 8px;
+  background: rgba(255,107,53,0.05);
+  animation: wrong-pulse 2s ease infinite;
+}
+@keyframes wrong-pulse {
+  0%,100%{box-shadow:none} 50%{box-shadow:0 0 20px rgba(255,107,53,0.15)}
+}
+.wrong-question {
+  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 600;
+  color: var(--text); margin-bottom: 24px; line-height: 1.4;
+}
+.wrong-options {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.wrong-opt {
+  padding: 14px 20px; font-family: 'Orbitron', monospace; font-size: 12px;
+  font-weight: 600; letter-spacing: 1px; border: 2px solid #2a2a3a;
+  border-radius: 10px; background: var(--bg-card); color: var(--text);
+  cursor: none; transition: all 0.3s;
+}
+.wrong-opt:hover:not(:disabled) {
+  border-color: var(--primary); box-shadow: 0 0 15px var(--primary-dim);
+  color: var(--primary);
+}
+.wrong-opt:disabled { opacity: 0.6; }
+.wrong-opt-correct {
+  border-color: var(--success) !important; background: rgba(0,255,136,0.08) !important;
+  color: var(--success) !important; box-shadow: 0 0 20px rgba(0,255,136,0.15) !important;
+}
+.wrong-opt-wrong {
+  border-color: var(--mythic) !important; background: rgba(255,45,120,0.08) !important;
+  color: var(--mythic) !important; box-shadow: 0 0 20px rgba(255,45,120,0.15) !important;
+  animation: wrong-opt-shake 0.5s ease;
+}
+@keyframes wrong-opt-shake {
+  0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)}
+}
+.wrong-feedback {
+  margin-top: 16px; font-family: 'Rajdhani', sans-serif; font-size: 16px;
+  font-weight: 600; letter-spacing: 0.5px; min-height: 24px;
+}
+
+/* ═══ CURSOR BETRAYAL ═══ */
+.cursed-game {
+  width: 100%; max-width: 560px; text-align: center;
+}
+.cursed-curse {
+  font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
+  letter-spacing: 3px; color: var(--mythic);
+  padding: 8px 20px; margin-bottom: 12px;
+  border: 1px solid rgba(255,45,120,0.3); border-radius: 8px;
+  background: rgba(255,45,120,0.05);
+  animation: cursed-pulse 1.5s ease infinite;
+}
+@keyframes cursed-pulse {
+  0%,100%{text-shadow:none} 50%{text-shadow:0 0 15px rgba(255,45,120,0.5)}
+}
+.cursed-instruction {
+  font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 600;
+  color: var(--text); margin-bottom: 16px;
+}
+.cursed-arena {
+  width: 100%; height: 300px; background: #0a0a12; border-radius: 12px;
+  border: 1px solid #1a1a2a; position: relative; overflow: hidden; cursor: none;
+}
+.cursed-fake-cursor {
+  position: absolute; font-size: 24px; color: var(--primary);
+  pointer-events: none; z-index: 10;
+  text-shadow: 0 0 15px var(--primary);
+  transition: left 0.05s, top 0.05s;
+}
+.cursed-target {
+  position: absolute; padding: 10px 20px;
+  font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; border: 2px solid #444;
+  border-radius: 8px; background: #1a1a2a; color: #fff;
+  cursor: none; transition: all 0.2s;
+}
+.cursed-target:hover { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); }
+.cursed-target-circle {
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  padding: 0; font-size: 10px;
+}
+
+/* ═══ EMOJI ROULETTE ═══ */
+.emoji-game {
+  width: 100%; max-width: 400px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.emoji-target-label {
+  font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; color: var(--text-dim);
+}
+.emoji-target {
+  font-size: 64px;
+  filter: drop-shadow(0 0 15px rgba(0,240,255,0.3));
+  animation: emoji-target-glow 2s ease infinite;
+}
+@keyframes emoji-target-glow {
+  0%,100%{transform:scale(1)} 50%{transform:scale(1.1)}
+}
+.emoji-spinner-container {
+  width: 160px; height: 160px; border-radius: 50%;
+  border: 3px solid #2a2a3a; background: #0d0d18;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 30px rgba(0,240,255,0.05), inset 0 0 30px rgba(0,0,0,0.3);
+  position: relative;
+}
+.emoji-spinner {
+  font-size: 72px; transition: transform 0.1s ease;
+}
+.emoji-spinner.emoji-match {
+  animation: emoji-match-pop 0.5s ease;
+}
+.emoji-spinner.emoji-miss {
+  animation: emoji-miss-shake 0.5s ease;
+}
+@keyframes emoji-match-pop {
+  0%{transform:scale(1)} 50%{transform:scale(1.5)} 100%{transform:scale(1.3)}
+}
+@keyframes emoji-miss-shake {
+  0%,100%{transform:translateX(0) scale(1)} 20%{transform:translateX(-10px)} 40%{transform:translateX(10px)}
+  60%{transform:translateX(-5px)} 80%{transform:translateX(5px)}
+}
+.emoji-stop-btn { margin-top: 10px; width: 160px; }
+.emoji-stop-btn:disabled { opacity: 0.4; }
+.emoji-feedback {
+  font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 600;
+  min-height: 28px; letter-spacing: 0.5px;
+}
+
 @media(max-width:600px) { .game-grid{grid-template-columns:1fr} .stats-grid{grid-template-columns:1fr 1fr} .line-2{font-size:36px} .xp-text{display:none} .game-grid-section{padding:20px 16px 60px} }
