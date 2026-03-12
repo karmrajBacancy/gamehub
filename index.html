@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS // Game Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Splash Entry Screen -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-content">
+      <div class="splash-logo glitch" data-text="NEXUS">NEXUS</div>
+      <div class="splash-tagline">GAME HUB</div>
+      <div class="splash-enter" id="splashEnter">
+        <span class="splash-enter-text">[ CLICK TO ENTER ]</span>
+        <div class="splash-ring"></div>
+        <div class="splash-ring splash-ring-2"></div>
+      </div>
+      <div class="splash-hint">sound will activate</div>
+    </div>
+    <div class="splash-scanlines"></div>
+  </div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-trail" id="cursorTrail"></div>
+
+  <!-- Particle Canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- Click Ripple -->
+  <div id="rippleContainer"></div>
+
+  <!-- Floating XP -->
+  <div id="floatingTexts"></div>
+
+  <!-- HUD -->
+  <header class="hud">
+    <div class="hud-left">
+      <div class="logo glitch" data-text="NEXUS">NEXUS</div>
+      <div class="hud-separator"></div>
+      <nav class="hud-nav">
+        <a href="#" class="hud-link active" data-view="dashboard" id="navDashboard">DASHBOARD</a>
+        <a href="#" class="hud-link" data-view="stats" id="navStats">STATS</a>
+      </nav>
+    </div>
+    <div class="hud-right">
+      <div class="xp-container">
+        <span class="xp-label">LVL <span id="level">1</span></span>
+        <div class="xp-bar">
+          <div class="xp-fill" id="xpFill"></div>
+        </div>
+        <span class="xp-text" id="xpText">0 / 100 XP</span>
+      </div>
+      <div class="coin-display">
+        <span class="coin-icon">&#9670;</span>
+        <span id="coins">0</span>
+      </div>
+      <button class="sound-toggle" id="soundToggle" title="Toggle Sound">
+        <span id="soundIcon">&#128266;</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Achievement Popup -->
+  <div class="achievement-popup" id="achievementPopup">
+    <div class="achievement-icon-wrap">&#9733;</div>
+    <div class="achievement-info">
+      <div class="achievement-title">ACHIEVEMENT UNLOCKED</div>
+      <div class="achievement-name" id="achievementName"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ DASHBOARD VIEW ═══════════ -->
+  <main class="view active" id="viewDashboard">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">GAME HUB</div>
+      <h1 class="hero-title">
+        <span class="line line-1">WELCOME, <span id="heroPlayerName">PLAYER</span></span>
+        <span class="line line-2 gradient-text">CHOOSE YOUR GAME</span>
+      </h1>
+      <p class="hero-sub">Beat your highscore, earn XP and coins</p>
+      <div class="player-name-setup" id="playerNameSetup">
+        <input type="text" class="player-name-input" id="playerNameInput" placeholder="Enter your name..." maxlength="16" autocomplete="off">
+        <button class="player-name-btn" id="playerNameBtn">SET NAME</button>
+      </div>
+      <div class="player-name-display" id="playerNameDisplay" style="display:none">
+        <span class="player-tag">&#9670; <span id="playerTagName">PLAYER</span></span>
+        <button class="player-name-edit" id="playerNameEdit">EDIT</button>
+      </div>
+    </section>
+
+    <!-- Game Grid -->
+    <section class="game-grid-section">
+      <div class="game-grid">
+
+        <div class="game-card" data-game="snake">
+          <div class="card-glow"></div>
+          <div class="card-border"></div>
+          <div class="card-content">
+            <div class="card-icon">&#128013;</div>
+            <h3 class="card-title">SNAKE</h3>
+            <p class="card-desc">Classic snake game. Eat, grow, survive.</p>
+            <div class="card-footer">
+              <span class="card-rarity legendary">LEGENDARY</span>
+              <span class="card-best">BEST: <span class="best-score" id="best-snake">0</span></span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+        <div class="game-card" data-game="memory">
+          <div class="card-glow"></div>
+          <div class="card-border"></div>
+          <div class="card-content">
+            <div class="card-icon">&#129504;</div>
+            <h3 class="card-title">MEMORY</h3>
+            <p class="card-desc">Match pairs. Test your memory skills.</p>
+            <div class="card-footer">
+              <span class="card-rarity epic">EPIC</span>
+              <span class="card-best">BEST: <span class="best-score" id="best-memory">0</span></span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+        <div class="game-card" data-game="reaction">
+          <div class="card-glow"></div>
+          <div class="card-border"></div>
+          <div class="card-content">
+            <div class="card-icon">&#9889;</div>
+            <h3 class="card-title">REACTION</h3>
+            <p class="card-desc">How fast can you click? Test your reflexes.</p>
+            <div class="card-footer">
+              <span class="card-rarity rare">RARE</span>
+              <span class="card-best">BEST: <span class="best-score" id="best-reaction">--</span></span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+        <div class="game-card" data-game="whack">
+          <div class="card-glow"></div>
+          <div class="card-border"></div>
+          <div class="card-content">
+            <div class="card-icon">&#128296;</div>
+            <h3 class="card-title">WHACK-A-BOT</h3>
+            <p class="card-desc">Smash the bots before they escape!</p>
+            <div class="card-footer">
+              <span class="card-rarity epic">EPIC</span>
+              <span class="card-best">BEST: <span class="best-score" id="best-whack">0</span></span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+        <div class="game-card" data-game="typing">
+          <div class="card-glow"></div>
+          <div class="card-border"></div>
+          <div class="card-content">
+            <div class="card-icon">&#9000;</div>
+            <h3 class="card-title">SPEED TYPE</h3>
+            <p class="card-desc">Type the words before time runs out.</p>
+            <div class="card-footer">
+              <span class="card-rarity mythic">MYTHIC</span>
+              <span class="card-best">BEST: <span class="best-score" id="best-typing">0</span></span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+        <div class="game-card" data-game="aim">
+          <div class="card-glow"></div>
+          <div class="card-border"></div>
+          <div class="card-content">
+            <div class="card-icon">&#127919;</div>
+            <h3 class="card-title">AIM TRAINER</h3>
+            <p class="card-desc">Hit 30 targets as fast as possible.</p>
+            <div class="card-footer">
+              <span class="card-rarity legendary">LEGENDARY</span>
+              <span class="card-best">BEST: <span class="best-score" id="best-aim">--</span></span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════ STATS VIEW ═══════════ -->
+  <main class="view" id="viewStats">
+    <section class="stats-section">
+      <div class="section-header">
+        <h2 class="section-title">PLAYER STATS</h2>
+        <p class="section-sub">Your journey so far</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="statGames">0</div>
+          <div class="stat-label">GAMES PLAYED</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="barGames"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="statXP">0</div>
+          <div class="stat-label">TOTAL XP</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="barXP"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="statCoins">0</div>
+          <div class="stat-label">COINS EARNED</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="barCoins"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="statAch">0 / 6</div>
+          <div class="stat-label">ACHIEVEMENTS</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="barAch"></div></div>
+        </div>
+      </div>
+
+      <!-- Achievements List -->
+      <div class="section-header" style="margin-top:40px">
+        <h2 class="section-title" style="font-size:28px">ACHIEVEMENTS</h2>
+      </div>
+      <div class="achievement-list">
+        <div class="achievement-row" id="ach-first-game">
+          <span class="ach-icon locked">&#9733;</span>
+          <div class="ach-info"><div class="ach-name">First Game</div><div class="ach-desc">Play any game for the first time</div></div>
+        </div>
+        <div class="achievement-row" id="ach-collector">
+          <span class="ach-icon locked">&#9733;</span>
+          <div class="ach-info"><div class="ach-name">Collector</div><div class="ach-desc">Play all 6 different games</div></div>
+        </div>
+        <div class="achievement-row" id="ach-level5">
+          <span class="ach-icon locked">&#9733;</span>
+          <div class="ach-info"><div class="ach-name">Veteran</div><div class="ach-desc">Reach Level 5</div></div>
+        </div>
+        <div class="achievement-row" id="ach-rich">
+          <span class="ach-icon locked">&#9733;</span>
+          <div class="ach-info"><div class="ach-name">Rich</div><div class="ach-desc">Earn 500 coins total</div></div>
+        </div>
+        <div class="achievement-row" id="ach-speedster">
+          <span class="ach-icon locked">&#9733;</span>
+          <div class="ach-info"><div class="ach-name">Speedster</div><div class="ach-desc">Reaction time under 250ms</div></div>
+        </div>
+        <div class="achievement-row" id="ach-marathon">
+          <span class="ach-icon locked">&#9733;</span>
+          <div class="ach-info"><div class="ach-name">Marathon</div><div class="ach-desc">Play 20 games total</div></div>
+        </div>
+      </div>
+
+      <!-- Game History -->
+      <div class="section-header" style="margin-top:40px">
+        <h2 class="section-title" style="font-size:28px">RECENT GAMES</h2>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">No games played yet. Go play!</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════ GAME OVERLAY ═══════════ -->
+  <div class="game-overlay" id="gameOverlay">
+    <div class="game-overlay-inner">
+      <div class="game-overlay-header">
+        <h2 class="game-overlay-title" id="overlayTitle">GAME</h2>
+        <button class="close-btn" id="closeGame">&#10005;</button>
+      </div>
+      <div class="game-overlay-body" id="gameContainer">
+        <!-- Games render here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Combo Counter -->
+  <div class="combo-display" id="comboDisplay">
+    <span class="combo-count" id="comboCount">0</span>
+    <span class="combo-label">COMBO</span>
+  </div>
+
+  <!-- Level Up Flash -->
+  <div class="level-up-overlay" id="levelUpOverlay">
+    <div class="level-up-content">
+      <div class="level-up-text">LEVEL UP!</div>
+      <div class="level-up-number" id="levelUpNumber">2</div>
+    </div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
