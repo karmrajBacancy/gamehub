@@ -49,7 +49,7 @@ const state = {
   coins: 0, totalCoins: 0, gamesPlayed: 0,
   gamesPlayedSet: new Set(),
   achievements: new Set(),
-  bestScores: { snake: 0, memory: 0, reaction: Infinity, whack: 0, typing: 0, aim: Infinity, panic: 0, wrong: 0, cursed: 0, emoji: 0, dodge: 0, slash: 0, runner: 0 },
+  bestScores: { snake: 0, memory: 0, reaction: Infinity, whack: 0, typing: 0, aim: Infinity, panic: 0, wrong: 0, cursed: 0, emoji: 0, dodge: 0, slash: 0, runner: 0, pour: 0, trivia: 0, spinwheel: 0, tipsy: 0, beerpong: 0, neverhave: 0 },
   history: [],
   combo: 0, comboTimer: null,
   playerName: localStorage.getItem("nexus_playerName") || "",
@@ -232,7 +232,7 @@ document.addEventListener("click", (e) => {
 // Wait for splash to be dismissed before setting landing timers
 function setupCardLanding() {
   document.querySelectorAll(".game-card").forEach((card, i) => {
-    const delay = [300, 700, 1100, 1500, 1900, 2300, 2700, 3100, 3500, 3900, 4300, 4700, 5100][i] || 300;
+    const delay = [300, 700, 1100, 1500, 1900, 2300, 2700, 3100, 3500, 3900, 4300, 4700, 5100, 5500, 5900, 6300, 6700, 7100, 7500][i] || 300;
     setTimeout(() => { card.classList.add("landed"); }, delay + 2000);
   });
 }
@@ -375,7 +375,9 @@ function endGame(gameName, score, label) {
 
   // Achievements
   if (state.gamesPlayed === 1) unlock("first-game", "First Game");
-  if (state.gamesPlayedSet.size >= 13) unlock("collector", "Collector");
+  if (state.gamesPlayedSet.size >= 19) unlock("collector", "Collector");
+  const partyGames = ["pour","trivia","spinwheel","tipsy","beerpong","neverhave"];
+  if (partyGames.every(g => state.gamesPlayedSet.has(g))) unlock("partyanimal", "Party Animal");
   if (state.gamesPlayed >= 20) unlock("marathon", "Marathon");
 
   return { xpEarned, coinsEarned, isBest };
@@ -388,11 +390,11 @@ function updateStatsView() {
   document.getElementById("statGames").textContent = state.gamesPlayed;
   document.getElementById("statXP").textContent = state.xp + (state.level - 1) * 100;
   document.getElementById("statCoins").textContent = state.totalCoins;
-  document.getElementById("statAch").textContent = `${state.achievements.size} / 8`;
+  document.getElementById("statAch").textContent = `${state.achievements.size} / 10`;
   document.getElementById("barGames").style.width = Math.min(state.gamesPlayed / 20 * 100, 100) + "%";
   document.getElementById("barXP").style.width = Math.min((state.xp + (state.level-1)*100) / 500 * 100, 100) + "%";
   document.getElementById("barCoins").style.width = Math.min(state.totalCoins / 500 * 100, 100) + "%";
-  document.getElementById("barAch").style.width = (state.achievements.size / 8 * 100) + "%";
+  document.getElementById("barAch").style.width = (state.achievements.size / 10 * 100) + "%";
 
   // History
   const list = document.getElementById("historyList");
@@ -455,10 +457,12 @@ function openGame(name) {
     snake: "SNAKE", memory: "MEMORY MATCH", reaction: "REACTION TIME",
     whack: "WHACK-A-BOT", typing: "SPEED TYPE", aim: "AIM TRAINER",
     panic: "PANIC BUTTON", wrong: "WRONG ANSWERS", cursed: "CURSOR BETRAYAL", emoji: "EMOJI ROULETTE",
-    dodge: "NEON DODGE", slash: "CYBER SLASH", runner: "GRAVITY RUNNER"
+    dodge: "NEON DODGE", slash: "CYBER SLASH", runner: "GRAVITY RUNNER",
+    pour: "POUR MASTER", trivia: "DRUNK TRIVIA", spinwheel: "CYBER WHEEL",
+    tipsy: "TIPSY TOWER", beerpong: "BEER PONG", neverhave: "NEVER HAVE I EVER"
   }[name];
   overlay.classList.add("active");
-  if (name === "snake" || name === "dodge") overlay.classList.add("fullscreen-game");
+  if (name === "snake" || name === "dodge" || name === "beerpong") overlay.classList.add("fullscreen-game");
   if (typeof NexusAudio !== 'undefined') NexusAudio.startGameMusic(name);
   gameContainer.innerHTML = "";
 
@@ -476,6 +480,12 @@ function openGame(name) {
     case "dodge": initDodge(); break;
     case "slash": initSlash(); break;
     case "runner": initRunner(); break;
+    case "pour": initPour(); break;
+    case "trivia": initTrivia(); break;
+    case "spinwheel": initSpinWheel(); break;
+    case "tipsy": initTipsy(); break;
+    case "beerpong": initBeerPong(); break;
+    case "neverhave": initNeverHave(); break;
   }
   setTimeout(setupCursorHovers, 100);
 }
@@ -675,6 +685,90 @@ const funnyMessages = {
     "{name} runs like they're carrying invisible furniture.",
     "The obstacles were rooting for {name}. They're disappointed too.",
     "That wasn't a run. That was a casual stroll into death."
+  ],
+  pour: [
+    "{name} poured like they're watering a garden with a firehose.",
+    "The glass filed a flooding complaint against {name}.",
+    "{name} couldn't fill a bathtub without burning the house down.",
+    "Bartenders worldwide just felt a disturbance watching {name}.",
+    "{name} overflowed harder than their inbox on a Monday.",
+    "The target line was RIGHT THERE, {name}. It was literally DRAWN for you.",
+    "{name} pours drinks like they pour concrete. Everywhere.",
+    "A toddler with a sippy cup has better precision than {name}.",
+    "Every drop {name} spilled just filed for emotional damages.",
+    "{name}'s pouring skills: perfect for flooding basements.",
+    "That glass needed therapy after what {name} did to it.",
+    "Fun fact: {name} once missed an entire ocean."
+  ],
+  trivia: [
+    "{name} knew nothing. Even Google felt embarrassed for them.",
+    "The blur wasn't the problem, {name}. Your brain was.",
+    "{name} picked the wrong answer on a TRUE or FALSE question.",
+    "Every neuron in {name}'s brain just went on strike.",
+    "The screen was blurry but {name}'s ignorance was crystal clear.",
+    "{name} studied at the University of Wrong Answers.",
+    "{name} failed a quiz about their own name.",
+    "The trivia bot just lowered the difficulty out of pity for {name}.",
+    "Even drunk, the ANSWERS don't change, {name}.",
+    "The blur was mercy. So {name} couldn't see how wrong they were.",
+    "{name}'s knowledge is more blurry than the screen.",
+    "Wikipedia just unfollowed {name} out of shame."
+  ],
+  spinwheel: [
+    "{name} thought they'd land on 'safe'. Adorable.",
+    "The wheel has spoken. {name} must obey.",
+    "{name} spun like their life depended on it. It didn't help.",
+    "Fate chose violence against {name}. The wheel never lies.",
+    "The wheel just created a core memory for {name}.",
+    "Someone get {name} a drink. They're gonna need it.",
+    "{name} should've stayed home. The wheel had plans.",
+    "Even the wheel felt bad for what it gave {name}.",
+    "The wheel said '{name}, you're cooked.' And it was right.",
+    "Legends say {name} is still doing that dare.",
+    "{name} really thought 'just one more spin' was a good idea.",
+    "That dare was designed specifically to humble {name}."
+  ],
+  tipsy: [
+    "{name} built that tower with the structural integrity of a wet napkin.",
+    "JENGA! Wait, this isn't Jenga. {name} still lost though.",
+    "{name} pulled ONE block. ONE. And everything collapsed.",
+    "Civil engineers just revoked {name}'s building license.",
+    "{name}'s tower lasted shorter than their attention span.",
+    "The blocks formed a support group after dealing with {name}.",
+    "That tower had dreams, {name}. You ended them.",
+    "Gravity was barely involved. {name} did ALL the damage.",
+    "Even earthquakes are more gentle than {name}.",
+    "{name} plays Tipsy Tower like they live life: recklessly.",
+    "The tower's last words: 'Why, {name}? Why?'",
+    "Architects just collectively sighed watching {name}."
+  ],
+  beerpong: [
+    "{name} missed every cup like they were avoiding them on purpose.",
+    "Steph Curry just unfollowed {name}.",
+    "The cups were RIGHT THERE, {name}. Stationary. Glowing.",
+    "{name} threw the ball like it owed them money.",
+    "Air ball? More like air EVERYTHING for {name}.",
+    "The ball went everywhere except where {name} aimed.",
+    "Frat houses across the nation just felt a disturbance thanks to {name}.",
+    "{name}'s aim is so bad the cups filed for witness protection.",
+    "The ball just asked to be reassigned to a competent player.",
+    "{name} couldn't hit water if they fell out of a boat.",
+    "Pro tip: the cups are the ROUND things on the TABLE, {name}.",
+    "{name} makes Stormtroopers look like sharpshooters."
+  ],
+  neverhave: [
+    "{name} has done EVERYTHING. And we mean EVERYTHING.",
+    "FBI wants to know {name}'s location after those answers.",
+    "{name}'s wildness score just broke the meter.",
+    "Even the game is scared of {name} now.",
+    "Someone call {name}'s mom. She needs to know.",
+    "{name} tapped 'yes' faster than anyone should.",
+    "The game just filed a restraining order against {name}.",
+    "{name}'s life is basically a reality TV show.",
+    "Never have I ever... met someone as wild as {name}.",
+    "The app needs therapy after learning about {name}.",
+    "{name}'s 'Never Have I Ever' became 'Always Have I Always.'",
+    "Plot twist: the game was supposed to judge {name}. {name} judged the game."
   ]
 };
 
@@ -726,13 +820,50 @@ const winMessages = {
     "{name} slashed so hard the game felt it.",
     "The glitches want a union after dealing with {name}.",
     "That was violence, {name}. Beautiful, pixelated violence."
+  ],
+  pour: [
+    "{name} pours like a Swiss watchmaker. A drunk Swiss watchmaker.",
+    "Every drop landed perfectly. The glass is speechless.",
+    "Bartender of the year goes to {name}. Reluctantly.",
+    "That pour was so clean, even the glass blushed."
+  ],
+  trivia: [
+    "Wait {name} can READ through blur? Witch confirmed.",
+    "{name}'s brain cells showed up drunk and STILL won.",
+    "Even with blurry vision, {name}'s mind is crystal clear.",
+    "Drunk genius. {name} just invented a new category."
+  ],
+  spinwheel: [
+    "{name} conquered every dare. Bow to the party monarch.",
+    "The wheel tried its worst. {name} didn't even flinch.",
+    "Party legend unlocked. {name} feared nothing.",
+    "The wheel owes {name} an apology and a trophy."
+  ],
+  tipsy: [
+    "{name} pulled blocks like a surgeon. A drunk surgeon, but still.",
+    "That tower should've fallen 10 blocks ago. {name} defied physics.",
+    "Engineers want to study {name}'s block-pulling technique.",
+    "The tower respects {name}. It stood out of fear."
+  ],
+  beerpong: [
+    "{name} just sank every cup. The table is trembling.",
+    "Kobe would be proud. Rest easy, {name} carries the legacy.",
+    "Every cup? EVERY CUP?! {name} is built different.",
+    "The cups knew they were doomed the moment {name} touched the ball."
+  ],
+  neverhave: [
+    "{name} is somehow the most innocent person alive. Suspicious.",
+    "Pure as snow. {name} has never done ANYTHING. Sure.",
+    "Either {name} is an angel or the best liar alive.",
+    "{name}'s wildness score is so low, even nuns are concerned."
   ]
 };
 
 const gameOverIcons = {
   snake: "💀", memory: "🧠", reaction: "⚡", whack: "🔨", typing: "⌨️", aim: "🎯",
   panic: "💨", wrong: "🤔", cursed: "👁️", emoji: "🎰",
-  dodge: "🚀", slash: "⚔️", runner: "🏃"
+  dodge: "🚀", slash: "⚔️", runner: "🏃",
+  pour: "🍺", trivia: "🧠", spinwheel: "🎡", tipsy: "🏗️", beerpong: "🏓", neverhave: "👀"
 };
 
 const gameOverTitles = {
@@ -748,7 +879,13 @@ const gameOverTitles = {
   emoji: "FINISHED!",
   dodge: "GAME OVER",
   slash: "GAME OVER",
-  runner: "CRASHED!"
+  runner: "CRASHED!",
+  pour: "OVERFLOWED!",
+  trivia: "BLACKED OUT!",
+  spinwheel: "SPUN OUT!",
+  tipsy: "COLLAPSED!",
+  beerpong: "GAME SET!",
+  neverhave: "EXPOSED!"
 };
 
 function showGameOver(gameName, res, isWin) {
@@ -2985,6 +3122,1462 @@ function initRunner() {
   }
 
   window._gameRAF = requestAnimationFrame(gameLoop);
+}
+
+// ═══════════════════════════════════════
+// GAME: POUR MASTER (Canvas precision pouring)
+// ═══════════════════════════════════════
+function initPour() {
+  const W = 400, H = 560;
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>SCORE: <b id="pourScore">0</b></span>
+      <span>ROUND: <b id="pourRound">1</b> / 10</span>
+      <span id="pourFeedback" class="pour-feedback"></span>
+    </div>
+    <canvas id="pourCanvas" width="${W}" height="${H}"></canvas>
+    <button class="game-btn pour-btn" id="pourBtn">POUR</button>
+  `;
+  const cvs = document.getElementById("pourCanvas");
+  const c = cvs.getContext("2d");
+  const btn = document.getElementById("pourBtn");
+  let score = 0, round = 1, pouring = false, stopped = false;
+  let liquidLevel = 0, targetLevel = 0, fillSpeed = 1.2;
+  let bubbles = [], foamBubbles = [];
+  let bottleAngle = 0; // bottle tilt animation
+
+  // Realistic pint glass dimensions (tapered)
+  const glassTopW = 120, glassBotW = 85, glassH = 310;
+  const glassCX = W / 2, glassTopY = 130;
+  const glassBaseY = glassTopY + glassH;
+  const glassThickness = 4;
+  const liquidMaxH = glassH - 15;
+
+  // Beer bottle position
+  const bottleCX = W / 2 + 20, bottleBaseY = 60;
+
+  function getGlassXat(y) {
+    // Returns left and right x at a given y (tapered glass)
+    const t = (y - glassTopY) / glassH; // 0 at top, 1 at bottom
+    const halfW = (glassTopW + (glassBotW - glassTopW) * t) / 2;
+    return { left: glassCX - halfW, right: glassCX + halfW };
+  }
+
+  function newRound() {
+    liquidLevel = 0;
+    stopped = false;
+    pouring = false;
+    targetLevel = 0.3 + Math.random() * 0.5;
+    fillSpeed = 1.2 + (round - 1) * 0.22;
+    bubbles = [];
+    foamBubbles = [];
+    bottleAngle = 0;
+    btn.textContent = "POUR";
+    btn.disabled = false;
+    draw();
+  }
+
+  // Spawn beer bubbles rising inside liquid
+  function spawnBubble() {
+    const liqH = liquidLevel * liquidMaxH;
+    if (liqH < 10) return;
+    const liqTopY = glassBaseY - liqH;
+    const spawnY = glassBaseY - Math.random() * liqH * 0.8;
+    const g = getGlassXat(spawnY);
+    bubbles.push({
+      x: g.left + 8 + Math.random() * (g.right - g.left - 16),
+      y: spawnY,
+      r: 1 + Math.random() * 2.5,
+      speed: 0.3 + Math.random() * 0.8,
+      wobble: Math.random() * Math.PI * 2,
+      topY: liqTopY
+    });
+  }
+
+  function draw() {
+    const t = Date.now();
+    c.clearRect(0, 0, W, H);
+
+    // Background - dark wooden bar surface
+    const barGrad = c.createLinearGradient(0, 0, 0, H);
+    barGrad.addColorStop(0, "#0c0806");
+    barGrad.addColorStop(0.7, "#1a120a");
+    barGrad.addColorStop(1, "#0d0904");
+    c.fillStyle = barGrad;
+    c.fillRect(0, 0, W, H);
+
+    // Subtle wood grain lines
+    c.globalAlpha = 0.03;
+    for (let i = 0; i < 20; i++) {
+      c.strokeStyle = "#8B7355";
+      c.lineWidth = 0.5;
+      c.beginPath();
+      const yOff = (i * 28) + Math.sin(i * 0.7) * 5;
+      c.moveTo(0, yOff);
+      c.bezierCurveTo(W * 0.3, yOff + 3, W * 0.7, yOff - 2, W, yOff + 1);
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+
+    // Bar surface reflection
+    c.fillStyle = "rgba(255,200,100,0.015)";
+    c.fillRect(0, H - 80, W, 80);
+
+    // === BEER BOTTLE (tilting when pouring) ===
+    if (pouring && !stopped) {
+      bottleAngle = Math.min(bottleAngle + 0.03, 0.7);
+    } else {
+      bottleAngle = Math.max(bottleAngle - 0.05, 0);
+    }
+
+    c.save();
+    const bottlePivotX = glassCX + 10;
+    const bottlePivotY = glassTopY - 10;
+    c.translate(bottlePivotX, bottlePivotY);
+    c.rotate(-bottleAngle);
+
+    // Bottle body
+    const bw = 28, bh = 110, bnw = 12, bnh = 40;
+    const bx = -bw / 2, by = -bh - bnh - 10;
+
+    // Bottle body (dark green glass)
+    const bottleGrad = c.createLinearGradient(bx, by + bnh, bx + bw, by + bnh + bh);
+    bottleGrad.addColorStop(0, "#1a3a1a");
+    bottleGrad.addColorStop(0.3, "#2d5a2d");
+    bottleGrad.addColorStop(0.5, "#3a7a3a");
+    bottleGrad.addColorStop(0.7, "#2d5a2d");
+    bottleGrad.addColorStop(1, "#1a3a1a");
+    c.fillStyle = bottleGrad;
+
+    // Body
+    c.beginPath();
+    c.moveTo(bx, by + bnh);
+    c.lineTo(bx, by + bnh + bh);
+    c.arc(bx + bw / 2, by + bnh + bh, bw / 2, Math.PI, 0, true);
+    c.lineTo(bx + bw, by + bnh);
+    c.closePath();
+    c.fill();
+
+    // Neck (tapers)
+    c.beginPath();
+    c.moveTo(-bnw / 2, by);
+    c.lineTo(bx, by + bnh);
+    c.lineTo(bx + bw, by + bnh);
+    c.lineTo(bnw / 2, by);
+    c.closePath();
+    c.fill();
+
+    // Neck top (rim)
+    c.fillStyle = "#4a8a4a";
+    c.fillRect(-bnw / 2, by - 4, bnw, 6);
+
+    // Glass highlight on bottle
+    c.fillStyle = "rgba(255,255,255,0.08)";
+    c.fillRect(bx + 4, by + bnh, 6, bh);
+    c.fillStyle = "rgba(255,255,255,0.04)";
+    c.fillRect(bx + bw - 8, by + bnh, 4, bh);
+
+    // Label on bottle
+    c.fillStyle = "rgba(255,220,150,0.15)";
+    c.fillRect(bx + 3, by + bnh + 25, bw - 6, 40);
+    c.strokeStyle = "rgba(255,220,150,0.2)";
+    c.lineWidth = 0.5;
+    c.strokeRect(bx + 3, by + bnh + 25, bw - 6, 40);
+
+    // Beer inside bottle (visible through glass)
+    if (bottleAngle > 0.1) {
+      c.fillStyle = "rgba(220,160,40,0.3)";
+      const beerLvl = by + bnh + 20;
+      c.fillRect(bx + 3, beerLvl, bw - 6, bh - 22);
+    }
+
+    c.restore();
+
+    // === POUR STREAM (realistic golden beer stream) ===
+    if (pouring && !stopped && bottleAngle > 0.15) {
+      const pourStartX = bottlePivotX - Math.sin(bottleAngle) * (bh + bnh + 10);
+      const pourStartY = bottlePivotY - Math.cos(bottleAngle) * (bh + bnh + 10) + 20;
+      const liqY = glassBaseY - liquidLevel * liquidMaxH;
+      const pourEndX = glassCX + Math.sin(t * 0.008) * 3;
+      const pourEndY = Math.min(liqY, glassBaseY - 5);
+
+      // Main stream
+      for (let s = 0; s < 3; s++) {
+        c.strokeStyle = s === 0 ? "rgba(220,160,40,0.7)" : s === 1 ? "rgba(240,190,60,0.4)" : "rgba(255,220,100,0.2)";
+        c.lineWidth = s === 0 ? 5 : s === 1 ? 8 : 11;
+        c.beginPath();
+        const sx = pourStartX + s * 0.5;
+        const wobble = Math.sin(t * 0.012 + s) * 4;
+        c.moveTo(sx, pourStartY);
+        c.bezierCurveTo(
+          sx + wobble, pourStartY + (pourEndY - pourStartY) * 0.3,
+          pourEndX - wobble * 0.5, pourStartY + (pourEndY - pourStartY) * 0.7,
+          pourEndX, pourEndY
+        );
+        c.stroke();
+      }
+
+      // Splash droplets where stream hits liquid
+      if (liquidLevel > 0.02) {
+        c.fillStyle = "rgba(255,220,100,0.5)";
+        for (let i = 0; i < 4; i++) {
+          const dx = (Math.random() - 0.5) * 20;
+          const dy = -Math.random() * 8;
+          c.beginPath();
+          c.arc(pourEndX + dx, pourEndY + dy, 1 + Math.random() * 1.5, 0, Math.PI * 2);
+          c.fill();
+        }
+      }
+    }
+
+    // === GLASS (realistic pint glass shape) ===
+    // Glass body - tapered shape with transparency
+    c.beginPath();
+    const tl = getGlassXat(glassTopY);
+    const bl = getGlassXat(glassBaseY);
+    c.moveTo(tl.left, glassTopY);
+    // Left side (slight curve for realism)
+    c.quadraticCurveTo(bl.left - 3, glassTopY + glassH * 0.6, bl.left, glassBaseY);
+    // Bottom
+    c.lineTo(bl.right, glassBaseY);
+    // Right side
+    c.quadraticCurveTo(tl.right + 3, glassTopY + glassH * 0.6, tl.right, glassTopY);
+    c.closePath();
+
+    // Glass fill (transparent with slight tint)
+    c.fillStyle = "rgba(200,220,240,0.04)";
+    c.fill();
+
+    // === BEER LIQUID ===
+    if (liquidLevel > 0) {
+      const liqH = liquidLevel * liquidMaxH;
+      const liqTopY = glassBaseY - liqH;
+      const foamH = Math.min(25, liqH * 0.15 + (pouring ? 8 : 3));
+
+      // Beer body
+      c.save();
+      c.beginPath();
+      const lt = getGlassXat(liqTopY + foamH);
+      const lb = getGlassXat(glassBaseY);
+      c.moveTo(lt.left + glassThickness, liqTopY + foamH);
+      c.lineTo(lb.left + glassThickness, glassBaseY - 3);
+      c.lineTo(lb.right - glassThickness, glassBaseY - 3);
+      c.lineTo(lt.right - glassThickness, liqTopY + foamH);
+      c.closePath();
+
+      // Golden beer gradient
+      const beerGrad = c.createLinearGradient(0, liqTopY + foamH, 0, glassBaseY);
+      beerGrad.addColorStop(0, "rgba(240,180,40,0.85)");
+      beerGrad.addColorStop(0.3, "rgba(210,150,30,0.9)");
+      beerGrad.addColorStop(0.6, "rgba(190,130,20,0.92)");
+      beerGrad.addColorStop(1, "rgba(160,100,10,0.95)");
+      c.fillStyle = beerGrad;
+      c.fill();
+
+      // Beer highlight (light reflection through glass)
+      c.fillStyle = "rgba(255,230,150,0.08)";
+      c.fillRect(lt.left + glassThickness + 5, liqTopY + foamH, 12, liqH - foamH - 5);
+
+      c.restore();
+
+      // === FOAM HEAD ===
+      const foamTopY = liqTopY;
+      const foamBotY = liqTopY + foamH;
+      const ft = getGlassXat(foamTopY);
+      const fb = getGlassXat(foamBotY);
+
+      // Foam body (creamy white)
+      c.save();
+      c.beginPath();
+      c.moveTo(ft.left + glassThickness, foamTopY);
+
+      // Wavy foam top
+      const foamLeftX = ft.left + glassThickness;
+      const foamRightX = ft.right - glassThickness;
+      const foamW = foamRightX - foamLeftX;
+      c.moveTo(foamLeftX, foamTopY + 3);
+      for (let x = 0; x <= foamW; x += 2) {
+        const wave1 = Math.sin((x * 0.08) + t * 0.002) * 3;
+        const wave2 = Math.sin((x * 0.15) + t * 0.003 + 1) * 2;
+        c.lineTo(foamLeftX + x, foamTopY + wave1 + wave2);
+      }
+      c.lineTo(fb.right - glassThickness, foamBotY);
+      c.lineTo(fb.left + glassThickness, foamBotY);
+      c.closePath();
+
+      const foamGrad = c.createLinearGradient(0, foamTopY, 0, foamBotY);
+      foamGrad.addColorStop(0, "rgba(255,252,240,0.95)");
+      foamGrad.addColorStop(0.3, "rgba(255,248,230,0.9)");
+      foamGrad.addColorStop(0.7, "rgba(250,240,210,0.85)");
+      foamGrad.addColorStop(1, "rgba(240,210,150,0.6)");
+      c.fillStyle = foamGrad;
+      c.fill();
+      c.restore();
+
+      // Foam bubble details on top
+      c.fillStyle = "rgba(255,255,255,0.3)";
+      for (let i = 0; i < 12; i++) {
+        const bx = foamLeftX + 8 + (i / 12) * (foamW - 16);
+        const by = foamTopY + Math.sin(i * 1.3 + t * 0.002) * 3 + 2;
+        const br = 2 + Math.sin(i * 2.1) * 1.5;
+        c.beginPath();
+        c.arc(bx, by, br, 0, Math.PI * 2);
+        c.fill();
+      }
+
+      // === BUBBLES rising in beer ===
+      if (pouring) { for (let i = 0; i < 2; i++) spawnBubble(); }
+      else if (Math.random() < 0.15) spawnBubble();
+
+      bubbles.forEach(b => {
+        b.y -= b.speed;
+        b.x += Math.sin(b.wobble + t * 0.003) * 0.3;
+        b.wobble += 0.02;
+
+        if (b.y > b.topY + foamH) {
+          c.fillStyle = `rgba(255,240,200,${0.3 + b.r * 0.1})`;
+          c.beginPath();
+          c.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          c.fill();
+          // Tiny highlight on bubble
+          c.fillStyle = "rgba(255,255,255,0.4)";
+          c.beginPath();
+          c.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2);
+          c.fill();
+        }
+      });
+      bubbles = bubbles.filter(b => b.y > liqTopY + foamH);
+    }
+
+    // === GLASS OUTLINE ===
+    c.beginPath();
+    const gtl = getGlassXat(glassTopY);
+    const gbl = getGlassXat(glassBaseY);
+    c.moveTo(gtl.left, glassTopY);
+    c.quadraticCurveTo(gbl.left - 3, glassTopY + glassH * 0.6, gbl.left, glassBaseY);
+    c.lineTo(gbl.right, glassBaseY);
+    c.quadraticCurveTo(gtl.right + 3, glassTopY + glassH * 0.6, gtl.right, glassTopY);
+
+    // Glass rim at top
+    c.moveTo(gtl.left - 2, glassTopY);
+    c.lineTo(gtl.right + 2, glassTopY);
+
+    c.strokeStyle = "rgba(200,220,240,0.35)";
+    c.lineWidth = glassThickness;
+    c.stroke();
+
+    // Glass highlight (left edge reflection)
+    c.strokeStyle = "rgba(255,255,255,0.1)";
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(gtl.left + 6, glassTopY + 10);
+    c.quadraticCurveTo(gbl.left + 3, glassTopY + glassH * 0.6, gbl.left + 6, glassBaseY - 10);
+    c.stroke();
+
+    // Glass highlight (right edge, subtler)
+    c.strokeStyle = "rgba(255,255,255,0.05)";
+    c.beginPath();
+    c.moveTo(gtl.right - 8, glassTopY + 10);
+    c.quadraticCurveTo(gbl.right - 5, glassTopY + glassH * 0.6, gbl.right - 8, glassBaseY - 10);
+    c.stroke();
+
+    // Glass base/foot
+    c.fillStyle = "rgba(200,220,240,0.15)";
+    c.beginPath();
+    c.moveTo(gbl.left - 5, glassBaseY);
+    c.lineTo(gbl.right + 5, glassBaseY);
+    c.lineTo(gbl.right + 8, glassBaseY + 8);
+    c.lineTo(gbl.left - 8, glassBaseY + 8);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = "rgba(200,220,240,0.25)";
+    c.lineWidth = 1.5;
+    c.stroke();
+
+    // Condensation droplets on glass
+    c.fillStyle = "rgba(200,230,255,0.08)";
+    for (let i = 0; i < 8; i++) {
+      const dy = glassTopY + 60 + (i * 35) + Math.sin(i * 3.7) * 15;
+      const g = getGlassXat(dy);
+      const dx = i % 2 === 0 ? g.left + 3 + Math.sin(i) * 3 : g.right - 5 + Math.cos(i) * 3;
+      c.beginPath();
+      c.ellipse(dx, dy, 1.5, 2.5, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+
+    // === TARGET LINE ===
+    const targetY = glassBaseY - (targetLevel * liquidMaxH);
+    const tg = getGlassXat(targetY);
+    c.setLineDash([6, 5]);
+    c.strokeStyle = "rgba(255,68,68,0.8)";
+    c.lineWidth = 2;
+    c.shadowColor = "#ff4444";
+    c.shadowBlur = 6;
+    c.beginPath();
+    c.moveTo(tg.left - 20, targetY);
+    c.lineTo(tg.right + 20, targetY);
+    c.stroke();
+    c.setLineDash([]);
+    c.shadowBlur = 0;
+
+    // Target arrow markers
+    c.fillStyle = "#ff4444";
+    c.font = "bold 11px Orbitron, monospace";
+    c.textAlign = "right";
+    c.fillText("TARGET", tg.left - 24, targetY + 4);
+    // Arrow
+    c.beginPath();
+    c.moveTo(tg.left - 18, targetY);
+    c.lineTo(tg.left - 12, targetY - 4);
+    c.lineTo(tg.left - 12, targetY + 4);
+    c.closePath();
+    c.fill();
+
+    // === PERCENTAGE ===
+    c.font = "bold 18px Orbitron, monospace";
+    c.fillStyle = "rgba(240,180,40,0.9)";
+    c.textAlign = "center";
+    c.shadowColor = "rgba(240,180,40,0.3)";
+    c.shadowBlur = 8;
+    c.fillText(Math.round(liquidLevel * 100) + "%", W / 2, glassBaseY + 35);
+    c.shadowBlur = 0;
+
+    // Round indicator
+    c.font = "12px Rajdhani, sans-serif";
+    c.fillStyle = "rgba(200,200,200,0.3)";
+    c.fillText("ROUND " + round + " / 10", W / 2, glassBaseY + 55);
+  }
+
+  function pourLoop() {
+    if (!pouring || stopped) return;
+    liquidLevel += fillSpeed * 0.003;
+    if (liquidLevel >= 1.0) {
+      liquidLevel = 1.0;
+      stopPour(true);
+      return;
+    }
+    draw();
+    window._gameRAF = requestAnimationFrame(pourLoop);
+  }
+
+  function stopPour(overflow) {
+    pouring = false;
+    stopped = true;
+    btn.disabled = true;
+
+    const diff = Math.abs(liquidLevel - targetLevel);
+    const pct = Math.round(diff * 100);
+    let feedback = "", pts = 0, color = "";
+
+    if (overflow) {
+      feedback = "OVERFLOW!"; pts = 0; color = "#ff3333";
+    } else if (pct <= 2) {
+      feedback = "PERFECT!"; pts = 5; color = "#ffd700";
+    } else if (pct <= 5) {
+      feedback = "GREAT!"; pts = 3; color = "#00ff88";
+    } else if (pct <= 10) {
+      feedback = "CLOSE!"; pts = 2; color = "#00f0ff";
+    } else if (pct <= 20) {
+      feedback = "OK"; pts = 1; color = "#b44aff";
+    } else {
+      feedback = "MISS!"; pts = 0; color = "#ff3333";
+    }
+
+    score += pts;
+    document.getElementById("pourScore").textContent = score;
+    const fb = document.getElementById("pourFeedback");
+    fb.textContent = feedback + (pts > 0 ? " +" + pts : "");
+    fb.style.color = color;
+    fb.style.textShadow = `0 0 10px ${color}`;
+    if (pts > 0 && typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+    else if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+
+    draw();
+
+    window._gameTimeout = setTimeout(() => {
+      if (!overlay.classList.contains("active")) return;
+      round++;
+      if (round > 10) {
+        const res = endGame("pour", score);
+        showGameOver("pour", res, score >= 25);
+      } else {
+        document.getElementById("pourRound").textContent = round;
+        newRound();
+      }
+    }, 1200);
+  }
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (stopped) return;
+    if (!pouring) {
+      pouring = true;
+      btn.textContent = "STOP";
+      pourLoop();
+    } else {
+      stopPour(false);
+    }
+  });
+
+  document.addEventListener("keydown", function pourKey(e) {
+    if (!overlay.classList.contains("active")) { document.removeEventListener("keydown", pourKey); return; }
+    if (e.key === " ") { e.preventDefault(); btn.click(); }
+  });
+
+  newRound();
+}
+
+// ═══════════════════════════════════════
+// GAME: DRUNK TRIVIA (DOM-based with blur effects)
+// ═══════════════════════════════════════
+function initTrivia() {
+  const questions = [
+    {q:"What planet is closest to the Sun?", opts:["Venus","Mercury","Mars","Earth"], ans:1},
+    {q:"How many hearts does an octopus have?", opts:["2","1","3","4"], ans:2},
+    {q:"What is the hardest natural substance?", opts:["Gold","Iron","Diamond","Titanium"], ans:2},
+    {q:"Which country invented pizza?", opts:["France","Italy","Greece","Spain"], ans:1},
+    {q:"How many bones are in the human body?", opts:["206","208","196","212"], ans:0},
+    {q:"What is the largest ocean?", opts:["Atlantic","Indian","Pacific","Arctic"], ans:2},
+    {q:"Who painted the Mona Lisa?", opts:["Picasso","Da Vinci","Van Gogh","Monet"], ans:1},
+    {q:"What gas do plants breathe in?", opts:["Oxygen","Nitrogen","CO2","Helium"], ans:2},
+    {q:"How many legs does a spider have?", opts:["6","8","10","12"], ans:1},
+    {q:"What is the fastest land animal?", opts:["Lion","Cheetah","Horse","Leopard"], ans:1},
+    {q:"Which element has symbol 'O'?", opts:["Gold","Osmium","Oxygen","Oganesson"], ans:2},
+    {q:"What year did the Titanic sink?", opts:["1905","1912","1920","1898"], ans:1},
+    {q:"How many continents are there?", opts:["5","6","7","8"], ans:2},
+    {q:"What is the smallest country?", opts:["Monaco","Vatican","Nauru","Malta"], ans:1},
+    {q:"Which planet has the most moons?", opts:["Jupiter","Saturn","Uranus","Neptune"], ans:1},
+    {q:"What color is a ruby?", opts:["Blue","Green","Red","Purple"], ans:2},
+    {q:"How many strings on a guitar?", opts:["4","5","6","8"], ans:2},
+    {q:"What animal is the tallest?", opts:["Elephant","Giraffe","Moose","Camel"], ans:1},
+    {q:"What is H2O commonly known as?", opts:["Salt","Sugar","Water","Air"], ans:2},
+    {q:"Which fruit has its seeds outside?", opts:["Apple","Kiwi","Strawberry","Grape"], ans:2},
+    {q:"What is the capital of Japan?", opts:["Seoul","Tokyo","Beijing","Bangkok"], ans:1},
+    {q:"How many sides does a hexagon have?", opts:["5","6","7","8"], ans:1},
+    {q:"What color are flamingos born?", opts:["Pink","White","Grey","Orange"], ans:2},
+    {q:"What is the largest mammal?", opts:["Elephant","Blue whale","Giraffe","Hippo"], ans:1},
+    {q:"Which planet is known as the Red Planet?", opts:["Venus","Mars","Jupiter","Mercury"], ans:1},
+    {q:"How many players on a soccer team?", opts:["9","10","11","12"], ans:2},
+    {q:"What is the boiling point of water?", opts:["90°C","95°C","100°C","110°C"], ans:2},
+    {q:"Who wrote Romeo and Juliet?", opts:["Dickens","Shakespeare","Austen","Twain"], ans:1},
+    {q:"What shape is a stop sign?", opts:["Circle","Square","Octagon","Triangle"], ans:2},
+    {q:"How many zeros in a million?", opts:["5","6","7","8"], ans:1},
+  ];
+
+  const shuffled = [...questions].sort(() => Math.random() - 0.5).slice(0, 12);
+  let current = 0, score = 0, answered = false;
+  let timerInterval = null, timeLeft = 10;
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>SCORE: <b id="triviaScore">0</b></span>
+      <span>ROUND: <b id="triviaRound">1</b> / 12</span>
+      <span>DRUNK: <b id="triviaDrunk">SOBER</b></span>
+    </div>
+    <div class="trivia-timer"><div class="trivia-timer-fill" id="triviaTimer"></div></div>
+    <div class="trivia-container" id="triviaContainer">
+      <div class="trivia-question" id="triviaQ"></div>
+      <div class="trivia-options" id="triviaOpts"></div>
+    </div>
+  `;
+
+  function getDrunkLevel() {
+    if (current < 3) return 0;
+    if (current < 5) return 1;
+    if (current < 7) return 2;
+    if (current < 9) return 3;
+    return 4;
+  }
+
+  function applyDrunkEffect() {
+    const container = document.getElementById("triviaContainer");
+    if (!container) return;
+    const level = getDrunkLevel();
+    const drunkLabels = ["SOBER","TIPSY","DRUNK","WASTED","BLACKED OUT"];
+    const drunkEl = document.getElementById("triviaDrunk");
+    if (drunkEl) { drunkEl.textContent = drunkLabels[level]; drunkEl.style.color = ["#00ff88","#ffd700","#ff6b35","#ff3333","#b44aff"][level]; }
+
+    switch (level) {
+      case 0: container.style.cssText = ""; break;
+      case 1: container.style.cssText = "filter: blur(0.5px); transform: rotate(0.5deg);"; break;
+      case 2: container.style.cssText = "filter: blur(1.5px) hue-rotate(10deg); transform: rotate(1deg) skewX(1deg);"; break;
+      case 3: container.style.cssText = "filter: blur(2.5px) hue-rotate(20deg); animation: drunkWobble 1s ease-in-out infinite;"; break;
+      case 4: container.style.cssText = "filter: blur(3.5px) hue-rotate(40deg); animation: drunkWobble 0.5s ease-in-out infinite;"; break;
+    }
+  }
+
+  function showQuestion() {
+    answered = false;
+    timeLeft = Math.max(6, 10 - Math.floor(current / 3));
+    const q = shuffled[current];
+    document.getElementById("triviaQ").textContent = q.q;
+    document.getElementById("triviaRound").textContent = current + 1;
+    const optsEl = document.getElementById("triviaOpts");
+    optsEl.innerHTML = "";
+    q.opts.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "trivia-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", (e) => { e.stopPropagation(); answer(i); });
+      optsEl.appendChild(btn);
+    });
+
+    applyDrunkEffect();
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    const bar = document.getElementById("triviaTimer");
+    const total = timeLeft;
+    bar.style.width = "100%";
+    timerInterval = setInterval(() => {
+      timeLeft -= 0.05;
+      bar.style.width = Math.max(0, (timeLeft / total) * 100) + "%";
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        if (!answered) answer(-1);
+      }
+    }, 50);
+    window._gameInterval = timerInterval;
+  }
+
+  function answer(idx) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const q = shuffled[current];
+    const btns = document.querySelectorAll(".trivia-option");
+    btns.forEach((b, i) => {
+      b.disabled = true;
+      if (i === q.ans) b.classList.add("correct");
+      if (i === idx && idx !== q.ans) b.classList.add("wrong");
+    });
+
+    if (idx === q.ans) {
+      score++;
+      document.getElementById("triviaScore").textContent = score;
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+    } else {
+      if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+    }
+
+    window._gameTimeout = setTimeout(() => {
+      if (!overlay.classList.contains("active")) return;
+      current++;
+      if (current >= shuffled.length) {
+        const res = endGame("trivia", score);
+        showGameOver("trivia", res, score >= 8);
+      } else {
+        showQuestion();
+      }
+    }, 1000);
+  }
+
+  showQuestion();
+  setTimeout(setupCursorHovers, 50);
+}
+
+// ═══════════════════════════════════════
+// GAME: CYBER WHEEL (Spin wheel with dares)
+// ═══════════════════════════════════════
+function initSpinWheel() {
+  const segments = [
+    { label: "TAKE A SIP", color: "#00f0ff", points: 1 },
+    { label: "DARE", color: "#b44aff", points: 3 },
+    { label: "TRUTH", color: "#ffd700", points: 2 },
+    { label: "GIVE A SIP", color: "#00ff88", points: 1 },
+    { label: "SAFE!", color: "#1a1a3a", points: 0 },
+    { label: "DOUBLE DARE", color: "#ff2d78", points: 5 },
+    { label: "TAKE A SIP", color: "#00f0ff", points: 1 },
+    { label: "DARE", color: "#ff6b35", points: 3 },
+  ];
+
+  const dares = [
+    "Do your best impression of a celebrity for 30 seconds",
+    "Let someone else post something on your social media",
+    "Show the last photo on your phone",
+    "Talk in an accent for the next 2 rounds",
+    "Do 10 pushups right now",
+    "Say something embarrassing about yourself",
+    "Let the group go through your recent messages",
+    "Do a silly dance for 15 seconds",
+    "Call a friend and sing them Happy Birthday",
+    "Speak in third person for the next 3 rounds",
+    "Try to lick your elbow",
+    "Let someone draw on your face with a marker",
+    "Act like a cat for 1 minute",
+    "Do your best robot impression",
+    "Tell your worst joke ever",
+  ];
+  const truths = [
+    "What's the most embarrassing thing you've googled?",
+    "What's the last lie you told?",
+    "What's your most irrational fear?",
+    "What's the worst date you've been on?",
+    "What's the most childish thing you still do?",
+    "If you could swap lives with someone here, who?",
+    "What's your guilty pleasure TV show?",
+    "What's the weirdest dream you've had?",
+    "What's the dumbest thing you've done while drunk?",
+    "What's the longest you've gone without showering?",
+  ];
+
+  let score = 0, spinsLeft = 8, spinning = false;
+  let currentAngle = 0;
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>DARE LEVEL: <b id="wheelScore">0</b></span>
+      <span>SPINS LEFT: <b id="wheelSpins">8</b></span>
+    </div>
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer">&#9660;</div>
+      <div class="wheel-container" id="wheelContainer">
+        <canvas id="wheelCanvas" width="300" height="300"></canvas>
+      </div>
+      <button class="game-btn wheel-spin-btn" id="wheelSpinBtn">SPIN!</button>
+    </div>
+    <div class="wheel-result" id="wheelResult"></div>
+  `;
+
+  const cvs = document.getElementById("wheelCanvas");
+  const c = cvs.getContext("2d");
+  const segAngle = (Math.PI * 2) / segments.length;
+
+  function drawWheel(rotation) {
+    c.clearRect(0, 0, 300, 300);
+    const cx = 150, cy = 150, r = 140;
+
+    segments.forEach((seg, i) => {
+      const startA = i * segAngle + rotation;
+      const endA = startA + segAngle;
+
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.arc(cx, cy, r, startA, endA);
+      c.closePath();
+      c.fillStyle = seg.color;
+      c.fill();
+      c.strokeStyle = "rgba(255,255,255,0.2)";
+      c.lineWidth = 2;
+      c.stroke();
+
+      // Label
+      c.save();
+      c.translate(cx, cy);
+      c.rotate(startA + segAngle / 2);
+      c.textAlign = "center";
+      c.fillStyle = seg.color === "#1a1a3a" ? "#00ff88" : "#fff";
+      c.font = "bold 11px Orbitron, monospace";
+      c.fillText(seg.label, r * 0.6, 4);
+      c.restore();
+    });
+
+    // Center circle
+    c.beginPath();
+    c.arc(cx, cy, 20, 0, Math.PI * 2);
+    c.fillStyle = "#0a0a15";
+    c.fill();
+    c.strokeStyle = "#00f0ff";
+    c.lineWidth = 2;
+    c.stroke();
+
+    // Outer ring glow
+    c.beginPath();
+    c.arc(cx, cy, r, 0, Math.PI * 2);
+    c.strokeStyle = "rgba(0,240,255,0.3)";
+    c.lineWidth = 3;
+    c.shadowColor = "#00f0ff";
+    c.shadowBlur = 15;
+    c.stroke();
+    c.shadowBlur = 0;
+  }
+
+  drawWheel(0);
+
+  document.getElementById("wheelSpinBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (spinning || spinsLeft <= 0) return;
+    spinning = true;
+    spinsLeft--;
+    document.getElementById("wheelSpins").textContent = spinsLeft;
+    document.getElementById("wheelResult").textContent = "";
+
+    const totalRotation = (5 + Math.random() * 5) * Math.PI * 2;
+    const duration = 3500;
+    const startTime = Date.now();
+    const startAngle = currentAngle;
+
+    function animSpin() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      currentAngle = startAngle + totalRotation * eased;
+      drawWheel(currentAngle);
+
+      if (progress < 1) {
+        window._gameRAF = requestAnimationFrame(animSpin);
+      } else {
+        // Determine winner
+        const normalizedAngle = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        // Pointer is at top (3π/2 or -π/2)
+        const pointerAngle = (Math.PI * 2 - normalizedAngle + Math.PI * 1.5) % (Math.PI * 2);
+        const segIdx = Math.floor(pointerAngle / segAngle) % segments.length;
+        const result = segments[segIdx];
+
+        score += result.points;
+        document.getElementById("wheelScore").textContent = score;
+
+        let resultText = result.label;
+        if (result.label === "DARE" || result.label === "DOUBLE DARE") {
+          resultText += ": " + dares[Math.floor(Math.random() * dares.length)];
+        } else if (result.label === "TRUTH") {
+          resultText += ": " + truths[Math.floor(Math.random() * truths.length)];
+        }
+
+        const resultEl = document.getElementById("wheelResult");
+        resultEl.textContent = resultText;
+        resultEl.style.color = result.color;
+
+        if (typeof NexusAudio !== 'undefined') NexusAudio.sfxHit();
+
+        spinning = false;
+
+        if (spinsLeft <= 0) {
+          window._gameTimeout = setTimeout(() => {
+            if (!overlay.classList.contains("active")) return;
+            const res = endGame("spinwheel", score);
+            showGameOver("spinwheel", res, score >= 15);
+          }, 2500);
+        }
+      }
+    }
+    animSpin();
+  });
+
+  setTimeout(setupCursorHovers, 50);
+}
+
+// ═══════════════════════════════════════
+// GAME: TIPSY TOWER (Canvas block-pulling Jenga)
+// ═══════════════════════════════════════
+function initTipsy() {
+  const W = 400, H = 550;
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>PULLED: <b id="tipsyScore">0</b></span>
+      <span>WOBBLE: <b id="tipsyWobble">STABLE</b></span>
+    </div>
+    <canvas id="tipsyCanvas" width="${W}" height="${H}"></canvas>
+  `;
+
+  const cvs = document.getElementById("tipsyCanvas");
+  const c = cvs.getContext("2d");
+  const ROWS = 10, COLS = 3;
+  const blockW = 80, blockH = 28, gap = 2;
+  const towerX = (W - COLS * (blockW + gap)) / 2;
+  const towerBaseY = H - 60;
+
+  const neonColors = ["#00f0ff","#b44aff","#00ff88","#ffd700","#ff6b35","#ff2d78"];
+  let blocks = [];
+  let pulled = 0, wobble = 0, alive = true;
+  let hoverBlock = null;
+  let pullAnim = null; // {block, startX, progress}
+
+  // Build tower
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      blocks.push({
+        row, col,
+        x: towerX + col * (blockW + gap),
+        y: towerBaseY - (row + 1) * (blockH + gap),
+        w: blockW, h: blockH,
+        color: neonColors[(row * COLS + col) % neonColors.length],
+        pulled: false,
+        sliding: false, slideX: 0
+      });
+    }
+  }
+
+  function getWobbleLabel() {
+    if (wobble < 2) return "STABLE";
+    if (wobble < 5) return "SHAKY";
+    if (wobble < 8) return "TIPSY";
+    return "CRITICAL!";
+  }
+
+  function draw() {
+    c.clearRect(0, 0, W, H);
+    c.fillStyle = "#08080f";
+    c.fillRect(0, 0, W, H);
+
+    // Ground
+    c.fillStyle = "rgba(0,240,255,0.05)";
+    c.fillRect(0, towerBaseY, W, H - towerBaseY);
+    c.strokeStyle = "rgba(0,240,255,0.2)";
+    c.lineWidth = 2;
+    c.beginPath(); c.moveTo(0, towerBaseY); c.lineTo(W, towerBaseY); c.stroke();
+
+    const time = Date.now() * 0.003;
+    const wobbleOffset = wobble > 0 ? Math.sin(time * (1 + wobble * 0.3)) * wobble * 0.8 : 0;
+
+    // Draw blocks
+    blocks.forEach(b => {
+      if (b.pulled) return;
+      const wx = b.x + wobbleOffset * (ROWS - b.row) * 0.15;
+      const bx = b.sliding ? b.x + b.slideX : wx;
+
+      c.shadowColor = b.color;
+      c.shadowBlur = hoverBlock === b ? 15 : 5;
+      c.fillStyle = hoverBlock === b ? b.color : b.color + "cc";
+      c.fillRect(bx, b.y, b.w, b.h);
+
+      // Edge highlight
+      c.fillStyle = "rgba(255,255,255,0.15)";
+      c.fillRect(bx, b.y, b.w, 3);
+
+      c.shadowBlur = 0;
+
+      // Border
+      c.strokeStyle = hoverBlock === b ? "#fff" : "rgba(255,255,255,0.1)";
+      c.lineWidth = hoverBlock === b ? 2 : 1;
+      c.strokeRect(bx, b.y, b.w, b.h);
+    });
+  }
+
+  function checkCollapse() {
+    // Higher pull count + edge blocks = more risk
+    const baseChance = 0.03 * pulled * pulled;
+    const rand = Math.random();
+    return rand < baseChance;
+  }
+
+  function collapse() {
+    alive = false;
+    if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+
+    // Scatter animation
+    let frame = 0;
+    blocks.forEach(b => {
+      if (!b.pulled) {
+        b.vx = (Math.random() - 0.5) * 8;
+        b.vy = -Math.random() * 6;
+        b.vr = (Math.random() - 0.5) * 0.2;
+        b.rot = 0;
+      }
+    });
+
+    function collapseAnim() {
+      c.clearRect(0, 0, W, H);
+      c.fillStyle = "#08080f";
+      c.fillRect(0, 0, W, H);
+      c.fillStyle = "rgba(0,240,255,0.05)";
+      c.fillRect(0, towerBaseY, W, H - towerBaseY);
+
+      blocks.forEach(b => {
+        if (b.pulled) return;
+        b.x += b.vx;
+        b.y += b.vy;
+        b.vy += 0.5;
+        b.rot += b.vr;
+        c.save();
+        c.translate(b.x + b.w / 2, b.y + b.h / 2);
+        c.rotate(b.rot);
+        c.fillStyle = b.color + "88";
+        c.shadowColor = b.color;
+        c.shadowBlur = 8;
+        c.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+        c.shadowBlur = 0;
+        c.restore();
+      });
+      frame++;
+      if (frame < 60) {
+        window._gameRAF = requestAnimationFrame(collapseAnim);
+      } else {
+        const res = endGame("tipsy", pulled);
+        showGameOver("tipsy", res, pulled >= 10);
+      }
+    }
+    collapseAnim();
+  }
+
+  function pullBlock(b) {
+    if (!alive || b.pulled) return;
+    b.pulled = true;
+    pulled++;
+    wobble += 0.8 + Math.random() * 0.5;
+
+    document.getElementById("tipsyScore").textContent = pulled;
+    const wLabel = getWobbleLabel();
+    const wEl = document.getElementById("tipsyWobble");
+    wEl.textContent = wLabel;
+    wEl.style.color = wobble < 2 ? "#00ff88" : wobble < 5 ? "#ffd700" : wobble < 8 ? "#ff6b35" : "#ff3333";
+
+    if (typeof NexusAudio !== 'undefined') NexusAudio.sfxClick();
+
+    // Check if all blocks pulled (win) or collapse
+    const remaining = blocks.filter(b => !b.pulled).length;
+    if (remaining <= 0) {
+      const res = endGame("tipsy", pulled);
+      showGameOver("tipsy", res, true);
+      return;
+    }
+
+    if (checkCollapse()) {
+      window._gameTimeout = setTimeout(() => { if (overlay.classList.contains("active")) collapse(); }, 300);
+    } else {
+      draw();
+    }
+  }
+
+  cvs.addEventListener("mousemove", (e) => {
+    if (!alive) return;
+    const rect = cvs.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top) * (H / rect.height);
+    hoverBlock = null;
+    for (const b of blocks) {
+      if (b.pulled) continue;
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+        hoverBlock = b;
+        break;
+      }
+    }
+    draw();
+  });
+
+  cvs.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (hoverBlock && alive) pullBlock(hoverBlock);
+  });
+
+  draw();
+}
+
+// ═══════════════════════════════════════
+// GAME: BEER PONG (Canvas projectile physics)
+// ═══════════════════════════════════════
+function initBeerPong() {
+  gameContainer.innerHTML = `
+    <div class="snake3d-hud">
+      <div class="snake3d-hud-item">CUPS <span id="bpCups">0</span> / 6</div>
+      <div class="snake3d-hud-item">THROWS <span id="bpThrows">10</span></div>
+      <div class="snake3d-hud-item">SCORE <span id="bpScore">0</span></div>
+    </div>
+    <canvas id="bpCanvas"></canvas>
+  `;
+
+  const cvs = document.getElementById("bpCanvas");
+  const c = cvs.getContext("2d");
+  function resize() {
+    if (!cvs.parentElement) return;
+    cvs.width = cvs.parentElement.offsetWidth;
+    cvs.height = cvs.parentElement.offsetHeight;
+  }
+  resize();
+  function bpResizeHandler() { resize(); cups = getCups(); }
+  window.addEventListener("resize", bpResizeHandler);
+  // Clean up resize listener when game closes
+  const bpCleanupObserver = new MutationObserver(() => {
+    if (!overlay.classList.contains("active")) {
+      window.removeEventListener("resize", bpResizeHandler);
+      bpCleanupObserver.disconnect();
+    }
+  });
+  bpCleanupObserver.observe(overlay, { attributes: true, attributeFilter: ["class"] });
+
+  let throwsLeft = 10, cupsSunk = 0, score = 0;
+  let aimX = cvs.width / 2, aimY = cvs.height * 0.8;
+  let ball = null; // {x, y, vx, vy, active}
+  let power = 0, charging = false;
+  let particles = [];
+
+  // Cup positions (triangle formation at top)
+  const cupR = 22;
+  function getCups() {
+    const cx = cvs.width / 2;
+    const topY = cvs.height * 0.15;
+    const rowGap = cupR * 2.2;
+    const colGap = cupR * 2.4;
+    return [
+      // Row 1 (3 cups)
+      { x: cx - colGap, y: topY, alive: true },
+      { x: cx, y: topY, alive: true },
+      { x: cx + colGap, y: topY, alive: true },
+      // Row 2 (2 cups)
+      { x: cx - colGap / 2, y: topY + rowGap, alive: true },
+      { x: cx + colGap / 2, y: topY + rowGap, alive: true },
+      // Row 3 (1 cup)
+      { x: cx, y: topY + rowGap * 2, alive: true },
+    ];
+  }
+
+  let cups = getCups();
+
+  cvs.addEventListener("mousemove", (e) => {
+    const rect = cvs.getBoundingClientRect();
+    aimX = e.clientX - rect.left;
+    aimY = e.clientY - rect.top;
+  });
+
+  cvs.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    if (ball && ball.active) return;
+    if (throwsLeft <= 0) return;
+    charging = true;
+    power = 0;
+  });
+
+  cvs.addEventListener("mouseup", (e) => {
+    e.stopPropagation();
+    if (!charging) return;
+    charging = false;
+    if (throwsLeft <= 0) return;
+    throwsLeft--;
+    document.getElementById("bpThrows").textContent = throwsLeft;
+
+    // Launch ball from bottom center toward aim point
+    const startX = cvs.width / 2;
+    const startY = cvs.height * 0.85;
+    const dx = aimX - startX;
+    const dy = aimY - startY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const speed = Math.min(power * 0.15 + 5, 18);
+    ball = {
+      x: startX, y: startY,
+      vx: (dx / dist) * speed * 0.6,
+      vy: (dy / dist) * speed - 4,
+      active: true,
+      radius: 8
+    };
+  });
+
+  function addSplash(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 1 + Math.random() * 3;
+      particles.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s - 2, life: 1, decay: 0.03, size: 2+Math.random()*3, color });
+    }
+  }
+
+  function gameLoop() {
+    if (!overlay.classList.contains("active")) return;
+    c.clearRect(0, 0, cvs.width, cvs.height);
+
+    // Table background
+    const bg = c.createLinearGradient(0, 0, 0, cvs.height);
+    bg.addColorStop(0, "#0a0a15");
+    bg.addColorStop(1, "#0d0d1a");
+    c.fillStyle = bg;
+    c.fillRect(0, 0, cvs.width, cvs.height);
+
+    // Table surface grid
+    c.strokeStyle = "rgba(0,240,255,0.03)";
+    c.lineWidth = 1;
+    for (let i = 0; i < cvs.width; i += 50) { c.beginPath(); c.moveTo(i,0); c.lineTo(i,cvs.height); c.stroke(); }
+    for (let i = 0; i < cvs.height; i += 50) { c.beginPath(); c.moveTo(0,i); c.lineTo(cvs.width,i); c.stroke(); }
+
+    // Center line
+    c.strokeStyle = "rgba(0,240,255,0.08)";
+    c.lineWidth = 2;
+    c.setLineDash([10, 10]);
+    c.beginPath(); c.moveTo(0, cvs.height * 0.5); c.lineTo(cvs.width, cvs.height * 0.5); c.stroke();
+    c.setLineDash([]);
+
+    // Draw cups
+    cups.forEach(cup => {
+      if (!cup.alive) return;
+      // Cup glow
+      c.shadowColor = "#b44aff";
+      c.shadowBlur = 15;
+      // Cup body
+      const cg = c.createRadialGradient(cup.x, cup.y, 0, cup.x, cup.y, cupR);
+      cg.addColorStop(0, "rgba(180,74,255,0.4)");
+      cg.addColorStop(0.7, "rgba(180,74,255,0.2)");
+      cg.addColorStop(1, "rgba(180,74,255,0.05)");
+      c.fillStyle = cg;
+      c.beginPath(); c.arc(cup.x, cup.y, cupR, 0, Math.PI * 2); c.fill();
+      // Cup rim
+      c.strokeStyle = "#b44aff";
+      c.lineWidth = 2.5;
+      c.beginPath(); c.arc(cup.x, cup.y, cupR, 0, Math.PI * 2); c.stroke();
+      // Inner rim
+      c.strokeStyle = "rgba(180,74,255,0.4)";
+      c.lineWidth = 1;
+      c.beginPath(); c.arc(cup.x, cup.y, cupR * 0.6, 0, Math.PI * 2); c.stroke();
+      c.shadowBlur = 0;
+    });
+
+    // Power bar while charging
+    if (charging) {
+      power = Math.min(power + 1.5, 100);
+      const barW = 200, barH = 12;
+      const barX = cvs.width / 2 - barW / 2;
+      const barY = cvs.height * 0.92;
+      c.fillStyle = "rgba(10,10,20,0.8)";
+      c.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
+      const pg = c.createLinearGradient(barX, 0, barX + barW, 0);
+      pg.addColorStop(0, "#00f0ff");
+      pg.addColorStop(0.5, "#b44aff");
+      pg.addColorStop(1, "#ff2d78");
+      c.fillStyle = pg;
+      c.fillRect(barX, barY, barW * (power / 100), barH);
+      c.strokeStyle = "rgba(0,240,255,0.3)";
+      c.strokeRect(barX, barY, barW, barH);
+
+      c.font = "bold 11px Orbitron, monospace";
+      c.fillStyle = "#00f0ff";
+      c.textAlign = "center";
+      c.fillText("POWER: " + Math.round(power) + "%", cvs.width / 2, barY - 6);
+    }
+
+    // Aim crosshair
+    if (!ball || !ball.active) {
+      c.strokeStyle = "rgba(0,240,255,0.4)";
+      c.lineWidth = 1;
+      c.beginPath(); c.moveTo(aimX - 15, aimY); c.lineTo(aimX + 15, aimY); c.stroke();
+      c.beginPath(); c.moveTo(aimX, aimY - 15); c.lineTo(aimX, aimY + 15); c.stroke();
+      c.beginPath(); c.arc(aimX, aimY, 10, 0, Math.PI * 2); c.stroke();
+
+      // Trajectory preview
+      if (charging || power > 0) {
+        const startX = cvs.width / 2, startY = cvs.height * 0.85;
+        const dx = aimX - startX, dy = aimY - startY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const speed = Math.min(power * 0.15 + 5, 18);
+        let pvx = (dx/dist)*speed*0.6, pvy = (dy/dist)*speed - 4;
+        let px = startX, py = startY;
+        c.setLineDash([4, 6]);
+        c.strokeStyle = "rgba(0,240,255,0.2)";
+        c.beginPath(); c.moveTo(px, py);
+        for (let i = 0; i < 25; i++) {
+          px += pvx; py += pvy; pvy += 0.25;
+          c.lineTo(px, py);
+        }
+        c.stroke();
+        c.setLineDash([]);
+      }
+    }
+
+    // Ball physics
+    if (ball && ball.active) {
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+      ball.vy += 0.25; // gravity
+
+      // Trail
+      c.globalAlpha = 0.3;
+      c.fillStyle = "#00f0ff";
+      c.beginPath(); c.arc(ball.x - ball.vx * 2, ball.y - ball.vy * 2, ball.radius * 0.6, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = 1;
+
+      // Ball
+      c.shadowColor = "#00f0ff";
+      c.shadowBlur = 15;
+      const bg = c.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, ball.radius);
+      bg.addColorStop(0, "#fff");
+      bg.addColorStop(0.5, "#00f0ff");
+      bg.addColorStop(1, "rgba(0,240,255,0.3)");
+      c.fillStyle = bg;
+      c.beginPath(); c.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); c.fill();
+      c.shadowBlur = 0;
+
+      // Check cup collision
+      for (const cup of cups) {
+        if (!cup.alive) continue;
+        const dx = ball.x - cup.x, dy = ball.y - cup.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < cupR + ball.radius * 0.5) {
+          cup.alive = false;
+          cupsSunk++;
+          score += 10;
+          document.getElementById("bpCups").textContent = cupsSunk;
+          document.getElementById("bpScore").textContent = score;
+          addSplash(cup.x, cup.y, "#b44aff", 20);
+          addSplash(cup.x, cup.y, "#00f0ff", 10);
+          if (typeof NexusAudio !== 'undefined') NexusAudio.sfxEat();
+          ball.active = false;
+          break;
+        }
+      }
+
+      // Ball out of bounds
+      if (ball.y > cvs.height + 50 || ball.x < -50 || ball.x > cvs.width + 50) {
+        ball.active = false;
+      }
+
+      // Check end
+      if (!ball.active) {
+        const allSunk = cups.every(c => !c.alive);
+        if (allSunk || throwsLeft <= 0) {
+          window._gameTimeout = setTimeout(() => {
+            if (!overlay.classList.contains("active")) return;
+            const res = endGame("beerpong", score);
+            showGameOver("beerpong", res, cupsSunk >= 4);
+          }, 1000);
+        }
+      }
+    }
+
+    // Particles
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.life -= p.decay;
+      if (p.life > 0) {
+        c.globalAlpha = p.life;
+        c.fillStyle = p.color;
+        c.shadowColor = p.color; c.shadowBlur = 6;
+        c.beginPath(); c.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); c.fill();
+        c.shadowBlur = 0;
+        c.globalAlpha = 1;
+      }
+    });
+    particles = particles.filter(p => p.life > 0);
+
+    window._gameRAF = requestAnimationFrame(gameLoop);
+  }
+
+  window._gameRAF = requestAnimationFrame(gameLoop);
+}
+
+// ═══════════════════════════════════════
+// GAME: NEVER HAVE I EVER (DOM party game)
+// ═══════════════════════════════════════
+function initNeverHave() {
+  const statements = [
+    { text: "Texted an ex at 2 AM", wild: 1 },
+    { text: "Pretended to be on the phone to avoid someone", wild: 1 },
+    { text: "Lied on my resume", wild: 2 },
+    { text: "Stalked someone's Instagram back to 2015", wild: 1 },
+    { text: "Been kicked out of a bar", wild: 3 },
+    { text: "Sent a text to the wrong person and panicked", wild: 1 },
+    { text: "Cried during a movie in public", wild: 1 },
+    { text: "Eaten food off the floor", wild: 1 },
+    { text: "Ghosted someone", wild: 2 },
+    { text: "Called a teacher 'Mom' or 'Dad'", wild: 1 },
+    { text: "Faked being sick to skip work/school", wild: 1 },
+    { text: "Had a crush on a cartoon character", wild: 1 },
+    { text: "Googled my own name", wild: 1 },
+    { text: "Tripped in public and pretended nothing happened", wild: 1 },
+    { text: "Peed in a pool", wild: 2 },
+    { text: "Accidentally liked an old photo while stalking", wild: 2 },
+    { text: "Said 'you too' when a waiter said 'enjoy your meal'", wild: 1 },
+    { text: "Worn the same outfit two days in a row", wild: 1 },
+    { text: "Laughed at something that wasn't funny to be polite", wild: 1 },
+    { text: "Pretended to know a song everyone was singing", wild: 1 },
+    { text: "Broken something and blamed someone else", wild: 2 },
+    { text: "Walked into a glass door", wild: 1 },
+    { text: "Drunk-texted my boss", wild: 3 },
+    { text: "Fallen asleep during a meeting or class", wild: 1 },
+    { text: "Regifted a present", wild: 2 },
+    { text: "Binged an entire TV show in one day", wild: 1 },
+    { text: "Waved back at someone who wasn't waving at me", wild: 1 },
+    { text: "Creeped on someone's profile for over an hour", wild: 2 },
+    { text: "Eaten something past its expiration date", wild: 1 },
+    { text: "Danced alone in my room like nobody's watching", wild: 1 },
+    { text: "Gone skinny dipping", wild: 3 },
+    { text: "Lied about my age", wild: 2 },
+    { text: "Had a full conversation with my pet", wild: 1 },
+    { text: "Accidentally sent a screenshot to the person in it", wild: 3 },
+    { text: "Cried because of a song", wild: 1 },
+    { text: "Skipped a shower for more than 2 days", wild: 2 },
+    { text: "Been on a blind date", wild: 2 },
+    { text: "Talked trash about someone, then realized they were behind me", wild: 3 },
+    { text: "Used someone else's Netflix without asking", wild: 1 },
+    { text: "Slept through an alarm for something important", wild: 2 },
+  ];
+
+  const shuffled = [...statements].sort(() => Math.random() - 0.5).slice(0, 15);
+  let current = 0, wildScore = 0;
+
+  gameContainer.innerHTML = `
+    <div class="game-score-bar">
+      <span>WILD SCORE: <b id="nhieScore">0</b></span>
+      <span>ROUND: <b id="nhieRound">1</b> / 15</span>
+      <span>RATING: <b id="nhieRating">ANGEL</b></span>
+    </div>
+    <div class="nhie-wild-meter">
+      <div class="nhie-wild-fill" id="nhieFill" style="width: 0%"></div>
+    </div>
+    <div class="nhie-container">
+      <div class="nhie-label">NEVER HAVE I EVER...</div>
+      <div class="nhie-statement" id="nhieStatement">${shuffled[0].text}</div>
+      <div class="nhie-buttons">
+        <button class="nhie-have-btn" id="nhieHave">I HAVE &#128293;</button>
+        <button class="nhie-never-btn" id="nhieNever">NEVER &#128519;</button>
+      </div>
+    </div>
+  `;
+
+  function getRating() {
+    if (wildScore <= 3) return { text: "ANGEL", color: "#00ff88" };
+    if (wildScore <= 8) return { text: "GOOD KID", color: "#00f0ff" };
+    if (wildScore <= 15) return { text: "ADVENTURER", color: "#ffd700" };
+    if (wildScore <= 22) return { text: "WILD CARD", color: "#ff6b35" };
+    return { text: "ABSOLUTE MENACE", color: "#ff2d78" };
+  }
+
+  function updateUI() {
+    document.getElementById("nhieScore").textContent = wildScore;
+    document.getElementById("nhieRound").textContent = current + 1;
+    const rating = getRating();
+    const ratingEl = document.getElementById("nhieRating");
+    ratingEl.textContent = rating.text;
+    ratingEl.style.color = rating.color;
+    document.getElementById("nhieFill").style.width = Math.min(100, (wildScore / 30) * 100) + "%";
+    document.getElementById("nhieFill").style.background = `linear-gradient(90deg, #00ff88, ${rating.color})`;
+  }
+
+  function showStatement() {
+    const stmtEl = document.getElementById("nhieStatement");
+    stmtEl.style.animation = "none";
+    stmtEl.offsetHeight; // reflow
+    stmtEl.style.animation = "nhie-fade-in 0.4s ease";
+    stmtEl.textContent = shuffled[current].text;
+  }
+
+  function nextRound() {
+    current++;
+    if (current >= shuffled.length) {
+      // Check wildcard achievement
+      if (wildScore >= 25) {
+        try { unlock("wildcard", "Wild Card"); } catch(e) {}
+      }
+      const res = endGame("neverhave", wildScore);
+      showGameOver("neverhave", res, wildScore >= 15);
+      return;
+    }
+    showStatement();
+    updateUI();
+  }
+
+  document.getElementById("nhieHave").addEventListener("click", (e) => {
+    e.stopPropagation();
+    wildScore += shuffled[current].wild;
+    if (typeof NexusAudio !== 'undefined') NexusAudio.sfxWrong();
+    // Flash red
+    const container = document.querySelector(".nhie-container");
+    container.style.borderColor = "#ff2d78";
+    container.style.boxShadow = "0 0 30px rgba(255,45,120,0.3)";
+    showFloatingText("+" + shuffled[current].wild + " WILD", mouseX, mouseY - 20, "#ff2d78");
+    setTimeout(() => { container.style.borderColor = ""; container.style.boxShadow = ""; }, 300);
+    nextRound();
+  });
+
+  document.getElementById("nhieNever").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (typeof NexusAudio !== 'undefined') NexusAudio.sfxCorrect();
+    // Flash green
+    const container = document.querySelector(".nhie-container");
+    container.style.borderColor = "#00ff88";
+    container.style.boxShadow = "0 0 30px rgba(0,255,136,0.3)";
+    showFloatingText("INNOCENT", mouseX, mouseY - 20, "#00ff88");
+    setTimeout(() => { container.style.borderColor = ""; container.style.boxShadow = ""; }, 300);
+    nextRound();
+  });
+
+  updateUI();
+  setTimeout(setupCursorHovers, 50);
 }
 
 // ═══════════════════════════════════════
