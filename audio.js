@@ -20,6 +20,22 @@ const NexusAudio = (() => {
   // "intro" | "dashboard" | "game" | "gameover"
   let audioState = "intro";
 
+  // iOS/mobile silent buffer unlock — must happen during user gesture
+  function unlockAudio() {
+    if (!ctx) return;
+    // Play a tiny silent buffer to unlock audio output on iOS
+    const silentBuf = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = silentBuf;
+    src.connect(ctx.destination);
+    src.start(0);
+    src.stop(ctx.currentTime + 0.001);
+    // Also resume if suspended
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+  }
+
   // Called ONCE from splash screen click — guaranteed user gesture
   function init() {
     if (initialized) return;
@@ -36,16 +52,21 @@ const NexusAudio = (() => {
       masterGain.connect(ctx.destination);
       initialized = true;
 
-      // If suspended, resume (user just clicked so this will work)
-      if (ctx.state === "suspended") ctx.resume();
+      // iOS unlock: play silent buffer + resume during user gesture
+      unlockAudio();
 
       // Mobile: keep resuming AudioContext on any user interaction
-      const resumeOnGesture = () => {
-        if (ctx && ctx.state === "suspended") ctx.resume();
-      };
+      const resumeOnGesture = () => unlockAudio();
       document.addEventListener("touchstart", resumeOnGesture, { passive: true });
       document.addEventListener("touchend", resumeOnGesture, { passive: true });
       document.addEventListener("click", resumeOnGesture, { passive: true });
+
+      // Resume audio when user comes back to the tab/app
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && ctx && ctx.state === "suspended") {
+          ctx.resume().catch(() => {});
+        }
+      });
 
       // Start intro sequence immediately
       audioState = "intro";
@@ -67,7 +88,7 @@ const NexusAudio = (() => {
   // ═══════════════════════════════════════
   function playTone(freq, duration, type, dest, vol, detune) {
     if (!ctx) return;
-    if (ctx.state === "suspended") ctx.resume();
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = type || "sine";
@@ -84,7 +105,7 @@ const NexusAudio = (() => {
 
   function playNoise(duration, filterFreq, dest, vol) {
     if (!ctx) return;
-    if (ctx.state === "suspended") ctx.resume();
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
     const bufSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
     const data = buf.getChannelData(0);

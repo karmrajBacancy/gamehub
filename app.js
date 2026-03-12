@@ -40,10 +40,12 @@
   function enterOnce(e) {
     splash.removeEventListener("click", enterOnce);
     splash.removeEventListener("touchstart", enterOnce);
+    splash.removeEventListener("touchend", enterOnce);
     enterSite();
   }
   splash.addEventListener("click", enterOnce);
   splash.addEventListener("touchstart", enterOnce, { passive: true });
+  splash.addEventListener("touchend", enterOnce, { passive: true });
 })();
 
 // ═══════════════════════════════════════
