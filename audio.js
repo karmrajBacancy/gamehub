@@ -39,6 +39,14 @@ const NexusAudio = (() => {
       // If suspended, resume (user just clicked so this will work)
       if (ctx.state === "suspended") ctx.resume();
 
+      // Mobile: keep resuming AudioContext on any user interaction
+      const resumeOnGesture = () => {
+        if (ctx && ctx.state === "suspended") ctx.resume();
+      };
+      document.addEventListener("touchstart", resumeOnGesture, { passive: true });
+      document.addEventListener("touchend", resumeOnGesture, { passive: true });
+      document.addEventListener("click", resumeOnGesture, { passive: true });
+
       // Start intro sequence immediately
       audioState = "intro";
       playIntroSequence();
@@ -59,6 +67,7 @@ const NexusAudio = (() => {
   // ═══════════════════════════════════════
   function playTone(freq, duration, type, dest, vol, detune) {
     if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = type || "sine";
@@ -75,6 +84,7 @@ const NexusAudio = (() => {
 
   function playNoise(duration, filterFreq, dest, vol) {
     if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
     const bufSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -116,6 +126,7 @@ const NexusAudio = (() => {
   // ═══════════════════════════════════════
   function _startDashboardMusic() {
     if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
     _stopAll();
 
     const BPM = 85;
@@ -340,6 +351,8 @@ const NexusAudio = (() => {
     pendingTimers.forEach(t => clearTimeout(t));
     pendingTimers = [];
     if (!ctx) return;
+    // Mobile: resume suspended AudioContext
+    if (ctx.state === "suspended") ctx.resume();
 
     const makers = {
       snake: musicSnake, memory: musicMemory, reaction: musicReaction,

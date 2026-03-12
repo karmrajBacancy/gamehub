@@ -37,8 +37,13 @@
     }, 800);
   }
 
-  splash.addEventListener("click", enterSite);
-  splash.addEventListener("touchstart", enterSite, { once: true });
+  function enterOnce(e) {
+    splash.removeEventListener("click", enterOnce);
+    splash.removeEventListener("touchstart", enterOnce);
+    enterSite();
+  }
+  splash.addEventListener("click", enterOnce);
+  splash.addEventListener("touchstart", enterOnce, { passive: true });
 })();
 
 // ═══════════════════════════════════════
