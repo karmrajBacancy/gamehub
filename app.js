@@ -97,66 +97,72 @@ const state = {
 // ═══════════════════════════════════════
 // CURSOR
 // ═══════════════════════════════════════
+// ── Touch detection ──
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
 const cursor = document.getElementById("cursor");
 const cursorTrail = document.getElementById("cursorTrail");
 let mouseX = 0, mouseY = 0, trailX = 0, trailY = 0;
 
-// ── Funny Cursor Emojis ──
-const cursorEmojis = ["🎯", "👾", "🚀", "🔥", "⚡", "🎮", "🤖", "💀", "👀", "🦄", "🍕", "🐱", "🧠", "💣", "🌮"];
-const trailEmojis = ["✨", "⭐", "💫", "🌟", "🔮", "💎", "🪐", "🌈", "🎪", "🍭"];
-let cursorEmojiIdx = 0;
-let trailEmojiIdx = 0;
+// Track touch position globally for games that need it
+document.addEventListener("touchmove", (e) => {
+  const t = e.touches[0];
+  if (t) { mouseX = t.clientX; mouseY = t.clientY; }
+}, { passive: true });
+document.addEventListener("touchstart", (e) => {
+  const t = e.touches[0];
+  if (t) { mouseX = t.clientX; mouseY = t.clientY; }
+}, { passive: true });
 
-function setRandomCursorEmoji() {
-  cursorEmojiIdx = Math.floor(Math.random() * cursorEmojis.length);
-  cursor.setAttribute("data-emoji", cursorEmojis[cursorEmojiIdx]);
-}
-function setRandomTrailEmoji() {
-  trailEmojiIdx = Math.floor(Math.random() * trailEmojis.length);
-  cursorTrail.setAttribute("data-emoji", trailEmojis[trailEmojiIdx]);
-}
+if (!isTouchDevice) {
+  // ── Funny Cursor Emojis (desktop only) ──
+  const cursorEmojis = ["🎯", "👾", "🚀", "🔥", "⚡", "🎮", "🤖", "💀", "👀", "🦄", "🍕", "🐱", "🧠", "💣", "🌮"];
+  const trailEmojis = ["✨", "⭐", "💫", "🌟", "🔮", "💎", "🪐", "🌈", "🎪", "🍭"];
 
-// Initial emojis
-setRandomCursorEmoji();
-setRandomTrailEmoji();
-
-// Rotate cursor emoji every 3 seconds
-setInterval(() => {
-  if (!cursor.classList.contains("hover") && !cursor.classList.contains("click")) {
-    setRandomCursorEmoji();
+  function setRandomCursorEmoji() {
+    cursor.setAttribute("data-emoji", cursorEmojis[Math.floor(Math.random() * cursorEmojis.length)]);
   }
-}, 3000);
+  function setRandomTrailEmoji() {
+    cursorTrail.setAttribute("data-emoji", trailEmojis[Math.floor(Math.random() * trailEmojis.length)]);
+  }
 
-// Rotate trail emoji every 5 seconds
-setInterval(setRandomTrailEmoji, 5000);
+  setRandomCursorEmoji();
+  setRandomTrailEmoji();
+  setInterval(() => {
+    if (!cursor.classList.contains("hover") && !cursor.classList.contains("click")) setRandomCursorEmoji();
+  }, 3000);
+  setInterval(setRandomTrailEmoji, 5000);
+  document.addEventListener("click", () => setTimeout(setRandomCursorEmoji, 200));
 
-// Change cursor on each click to a random one
-document.addEventListener("click", () => {
-  setTimeout(setRandomCursorEmoji, 200);
-});
+  document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursor.style.left = mouseX + "px"; cursor.style.top = mouseY + "px";
+  });
 
-document.addEventListener("mousemove", (e) => {
-  mouseX = e.clientX; mouseY = e.clientY;
-  cursor.style.left = mouseX + "px"; cursor.style.top = mouseY + "px";
-});
+  (function animateTrail() {
+    trailX += (mouseX - trailX) * 0.12;
+    trailY += (mouseY - trailY) * 0.12;
+    cursorTrail.style.left = trailX + "px";
+    cursorTrail.style.top = trailY + "px";
+    requestAnimationFrame(animateTrail);
+  })();
 
-(function animateTrail() {
-  trailX += (mouseX - trailX) * 0.12;
-  trailY += (mouseY - trailY) * 0.12;
-  cursorTrail.style.left = trailX + "px";
-  cursorTrail.style.top = trailY + "px";
-  requestAnimationFrame(animateTrail);
-})();
+  document.addEventListener("mousedown", () => cursor.classList.add("click"));
+  document.addEventListener("mouseup", () => cursor.classList.remove("click"));
+} else {
+  // Hide cursor elements on touch
+  cursor.style.display = "none";
+  cursorTrail.style.display = "none";
+}
 
 function setupCursorHovers() {
+  if (isTouchDevice) return; // No hover on touch
   document.querySelectorAll("a, button, .game-card, .stat-card, .achievement-row, .play-btn, .close-btn, .game-btn, .memory-cell, .whack-hole, .aim-target, .reaction-box").forEach((el) => {
     el.addEventListener("mouseenter", () => cursor.classList.add("hover"));
     el.addEventListener("mouseleave", () => cursor.classList.remove("hover"));
   });
 }
 setupCursorHovers();
-document.addEventListener("mousedown", () => cursor.classList.add("click"));
-document.addEventListener("mouseup", () => cursor.classList.remove("click"));
 
 // ═══════════════════════════════════════
 // PARTICLES
@@ -250,20 +256,22 @@ if (document.body.classList.contains("splash-active")) {
   setupCardLanding();
 }
 
-// Card tilt (always active, but only when "landed")
-document.querySelectorAll(".game-card").forEach((card) => {
-  card.addEventListener("mousemove", (e) => {
-    if (!card.classList.contains("landed")) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    card.style.transform = `perspective(800px) rotateX(${(y-0.5)*12}deg) rotateY(${(x-0.5)*-12}deg) scale(1.02)`;
-    card.style.setProperty("--mx", x*100+"%"); card.style.setProperty("--my", y*100+"%");
+// Card tilt (desktop only — disabled on touch for performance)
+if (!isTouchDevice) {
+  document.querySelectorAll(".game-card").forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      if (!card.classList.contains("landed")) return;
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      card.style.transform = `perspective(800px) rotateX(${(y-0.5)*12}deg) rotateY(${(x-0.5)*-12}deg) scale(1.02)`;
+      card.style.setProperty("--mx", x*100+"%"); card.style.setProperty("--my", y*100+"%");
+    });
+    card.addEventListener("mouseleave", () => {
+      if (card.classList.contains("landed")) card.style.transform = "";
+    });
   });
-  card.addEventListener("mouseleave", () => {
-    if (card.classList.contains("landed")) card.style.transform = "";
-  });
-});
+}
 
 // ═══════════════════════════════════════
 // NAVIGATION
@@ -1586,6 +1594,48 @@ function initSnake() {
     }
   };
   document.addEventListener("keydown", handler);
+
+  // Mobile touch controls: swipe + on-screen d-pad
+  if (isTouchDevice) {
+    let touchStartX = 0, touchStartY = 0;
+    cvs.addEventListener("touchstart", (e) => {
+      const t = e.touches[0]; if (!t) return;
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      if (!started) startGame();
+    }, { passive: true });
+    cvs.addEventListener("touchend", (e) => {
+      const t = e.changedTouches[0]; if (!t) return;
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      const absDx = Math.abs(dx), absDy = Math.abs(dy);
+      if (Math.max(absDx, absDy) < 20) return; // too small
+      let nd;
+      if (absDx > absDy) nd = dx > 0 ? {x:1,y:0} : {x:-1,y:0};
+      else nd = dy > 0 ? {x:0,y:1} : {x:0,y:-1};
+      if (nd && !(nd.x === -dir.x && nd.y === -dir.y)) nextDir = nd;
+    }, { passive: true });
+
+    // On-screen d-pad
+    const dpad = document.createElement("div");
+    dpad.className = "snake-dpad";
+    dpad.innerHTML = `
+      <button class="dpad-btn dpad-up" data-dx="0" data-dy="-1">&#9650;</button>
+      <button class="dpad-btn dpad-left" data-dx="-1" data-dy="0">&#9664;</button>
+      <button class="dpad-btn dpad-right" data-dx="1" data-dy="0">&#9654;</button>
+      <button class="dpad-btn dpad-down" data-dx="0" data-dy="1">&#9660;</button>
+    `;
+    gameContainer.appendChild(dpad);
+    dpad.querySelectorAll(".dpad-btn").forEach(b => {
+      b.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const nd = { x: parseInt(b.dataset.dx), y: parseInt(b.dataset.dy) };
+        if (!(nd.x === -dir.x && nd.y === -dir.y)) nextDir = nd;
+        if (!started) startGame();
+      }, { passive: false });
+    });
+  }
 }
 
 // ═══════════════════════════════════════
@@ -2124,20 +2174,23 @@ function initPanic() {
     });
   }
 
-  // Flee on mouse proximity
-  arena.addEventListener("mousemove", (e) => {
+  // Flee on mouse/touch proximity
+  function checkProximity(clientX, clientY) {
     const rect = btn.getBoundingClientRect();
     const bx = rect.left + rect.width / 2;
     const by = rect.top + rect.height / 2;
-    const dx = e.clientX - bx;
-    const dy = e.clientY - by;
+    const dx = clientX - bx;
+    const dy = clientY - by;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < 120) {
       moveBtn();
       moveDecoys();
       taunt.textContent = panicTaunts[Math.floor(Math.random() * panicTaunts.length)];
     }
-  });
+  }
+  arena.addEventListener("mousemove", (e) => checkProximity(e.clientX, e.clientY));
+  arena.addEventListener("touchmove", (e) => { e.preventDefault(); const t = e.touches[0]; if (t) checkProximity(t.clientX, t.clientY); }, { passive: false });
+  arena.addEventListener("touchstart", (e) => { const t = e.touches[0]; if (t) checkProximity(t.clientX, t.clientY); }, { passive: true });
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -2601,11 +2654,14 @@ function initDodge() {
   let spawnRate = 800, speedMult = 1;
   let lastSpawn = Date.now(), startTime = Date.now();
 
-  cvs.addEventListener("mousemove", (e) => {
+  function updatePlayerPos(clientX, clientY) {
     const rect = cvs.getBoundingClientRect();
-    playerX = Math.max(playerR, Math.min(cvs.width - playerR, e.clientX - rect.left));
-    playerY = Math.max(playerR, Math.min(cvs.height - playerR, e.clientY - rect.top));
-  });
+    playerX = Math.max(playerR, Math.min(cvs.width - playerR, clientX - rect.left));
+    playerY = Math.max(playerR, Math.min(cvs.height - playerR, clientY - rect.top));
+  }
+  cvs.addEventListener("mousemove", (e) => updatePlayerPos(e.clientX, e.clientY));
+  cvs.addEventListener("touchmove", (e) => { e.preventDefault(); const t = e.touches[0]; if (t) updatePlayerPos(t.clientX, t.clientY); }, { passive: false });
+  cvs.addEventListener("touchstart", (e) => { const t = e.touches[0]; if (t) updatePlayerPos(t.clientX, t.clientY); }, { passive: true });
 
   function spawnProjectile() {
     const edge = Math.floor(Math.random() * 4);
@@ -2951,6 +3007,7 @@ function initRunner() {
   };
   document.addEventListener("keydown", keyHandler);
   cvs.addEventListener("click", jump);
+  cvs.addEventListener("touchstart", (e) => { e.preventDefault(); jump(); }, { passive: false });
 
   function spawnObstacle() {
     const types = ["spike", "wall", "gap"];
@@ -4152,6 +4209,39 @@ function initTipsy() {
     if (hoverBlock && alive) pullBlock(hoverBlock);
   });
 
+  // Touch support for mobile
+  cvs.addEventListener("touchstart", (e) => {
+    e.stopPropagation();
+    const t = e.touches[0]; if (!t || !alive) return;
+    const rect = cvs.getBoundingClientRect();
+    const mx = (t.clientX - rect.left) * (W / rect.width);
+    const my = (t.clientY - rect.top) * (H / rect.height);
+    for (const b of blocks) {
+      if (b.pulled) continue;
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+        hoverBlock = b;
+        pullBlock(b);
+        break;
+      }
+    }
+  }, { passive: false });
+  cvs.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const t = e.touches[0]; if (!t || !alive) return;
+    const rect = cvs.getBoundingClientRect();
+    const mx = (t.clientX - rect.left) * (W / rect.width);
+    const my = (t.clientY - rect.top) * (H / rect.height);
+    hoverBlock = null;
+    for (const b of blocks) {
+      if (b.pulled) continue;
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+        hoverBlock = b;
+        break;
+      }
+    }
+    draw();
+  }, { passive: false });
+
   draw();
 }
 
@@ -4236,8 +4326,10 @@ function initBeerPong() {
     if (throwsLeft <= 0) return;
     throwsLeft--;
     document.getElementById("bpThrows").textContent = throwsLeft;
+    launchBall();
+  });
 
-    // Launch ball from bottom center toward aim point
+  function launchBall() {
     const startX = cvs.width / 2;
     const startY = cvs.height * 0.85;
     const dx = aimX - startX;
@@ -4251,6 +4343,35 @@ function initBeerPong() {
       active: true,
       radius: 8
     };
+  }
+
+  // Touch support for mobile Beer Pong
+  cvs.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const t = e.touches[0]; if (!t) return;
+    const rect = cvs.getBoundingClientRect();
+    aimX = t.clientX - rect.left;
+    aimY = t.clientY - rect.top;
+  }, { passive: false });
+  cvs.addEventListener("touchstart", (e) => {
+    e.stopPropagation();
+    const t = e.touches[0]; if (!t) return;
+    const rect = cvs.getBoundingClientRect();
+    aimX = t.clientX - rect.left;
+    aimY = t.clientY - rect.top;
+    if (ball && ball.active) return;
+    if (throwsLeft <= 0) return;
+    charging = true;
+    power = 0;
+  }, { passive: false });
+  cvs.addEventListener("touchend", (e) => {
+    e.stopPropagation();
+    if (!charging) return;
+    charging = false;
+    if (throwsLeft <= 0) return;
+    throwsLeft--;
+    document.getElementById("bpThrows").textContent = throwsLeft;
+    launchBall();
   });
 
   function addSplash(x, y, color, count) {
